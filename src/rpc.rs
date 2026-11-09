@@ -10,9 +10,9 @@ use wind_ipc::rpc::{PROTOCOL_VERSION, Request, Response};
 
 const MAX_FRAME: u32 = 16 * 1024 * 1024;
 
-/// 管道/socket 后缀。优先级：WIND_PIPE_SUFFIX 环境变量 > 运行时模式。
+/// 管道/socket 后缀。优先级：MOODFLOW_PIPE_SUFFIX 环境变量 > 运行时模式。
 fn endpoint_suffix() -> String {
-    std::env::var("WIND_PIPE_SUFFIX").unwrap_or_else(|_| crate::mode::pipe_suffix().to_string())
+    std::env::var("MOODFLOW_PIPE_SUFFIX").unwrap_or_else(|_| crate::mode::pipe_suffix().to_string())
 }
 
 /// 控制通道端点路径。与 wind-rpc 的 ctrl_endpoint 一致。
@@ -21,14 +21,14 @@ pub fn ctrl_endpoint() -> String {
     #[cfg(windows)]
     {
         // 末尾化，对齐 core wind-rpc::server::ctrl_endpoint
-        // （release: wind_input_ctrl，dev: wind_input_ctrl_dev）。
-        format!(r"\\.\pipe\wind_input_ctrl{suffix}")
+        // （release: moodflow_rpc_ctrl，dev: moodflow_rpc_ctrl_dev）。
+        format!(r"\\.\pipe\moodflow_rpc_ctrl{suffix}")
     }
     #[cfg(unix)]
     {
-        // unix 侧 core 用中间化 wind_input{suffix}_ctrl.sock，保持一致。
+        // unix 侧 core 用中间化 moodflow_rpc{suffix}_ctrl.sock，保持一致。
         let dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".to_string());
-        format!("{dir}/wind_input{suffix}_ctrl.sock")
+        format!("{dir}/moodflow_rpc{suffix}_ctrl.sock")
     }
 }
 
@@ -186,7 +186,7 @@ fn timeout_for(method: &str) -> std::time::Duration {
     }
 }
 
-/// 测试用互斥锁：`WIND_RPC_MOCK` 是**进程全局**环境变量,任何读写它的测试都必须先持有本锁。
+/// 测试用互斥锁：`MOODFLOW_RPC_MOCK` 是**进程全局**环境变量,任何读写它的测试都必须先持有本锁。
 ///
 /// 必须全 crate 共用一把。曾经 `state` 与 `theme_import` 各自定义了一个同名 static,
 /// 两把锁互不相识却保护同一个变量 —— 一侧刚 `set_var`,另一侧测试结束时的 `remove_var`
@@ -211,7 +211,7 @@ pub fn call_core_within(
     params: &Value,
     timeout: std::time::Duration,
 ) -> Result<Value, String> {
-    if std::env::var("WIND_RPC_MOCK").as_deref() == Ok("1") {
+    if std::env::var("MOODFLOW_RPC_MOCK").as_deref() == Ok("1") {
         return mock_result(method, params);
     }
     let endpoint = ctrl_endpoint();
@@ -280,7 +280,7 @@ fn connect_pipe(endpoint: &str, max_attempts: u32) -> std::io::Result<std::fs::F
 
 /// 是否处于离线 mock 模式。
 pub fn is_mock() -> bool {
-    std::env::var("WIND_RPC_MOCK").as_deref() == Ok("1")
+    std::env::var("MOODFLOW_RPC_MOCK").as_deref() == Ok("1")
 }
 
 // ─────────────────── 事件订阅（core → 设置端单向推送） ───────────────────
@@ -292,7 +292,7 @@ pub fn is_mock() -> bool {
 const EVENTS_RECONNECT_DELAY: std::time::Duration = std::time::Duration::from_secs(3);
 
 /// 事件通道端点。**命名规则与 [`ctrl_endpoint`] 不一致**：core 侧 ctrl 是末尾化
-/// （`wind_input_ctrl{suffix}`），events 是中间化（`wind_input{suffix}_events`）——
+/// （`moodflow_rpc_ctrl{suffix}`），events 是中间化（`moodflow_rpc{suffix}_events`）——
 /// 见 wind-rpc/src/server.rs 的 `ctrl_endpoint` / `events_endpoint`。
 ///
 /// 这里手抄格式而非直接调 core 的函数：wind-rpc 只是 dev-dependency（运行时依赖
@@ -302,12 +302,12 @@ pub fn events_endpoint() -> String {
     let suffix = endpoint_suffix();
     #[cfg(windows)]
     {
-        format!(r"\\.\pipe\wind_input{suffix}_events")
+        format!(r"\\.\pipe\moodflow_rpc{suffix}_events")
     }
     #[cfg(unix)]
     {
         let dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".to_string());
-        format!("{dir}/wind_input{suffix}_events.sock")
+        format!("{dir}/moodflow_rpc{suffix}_events.sock")
     }
 }
 
@@ -452,7 +452,7 @@ mod tests {
     #[test]
     fn test_ctrl_endpoint_format() {
         let ep = ctrl_endpoint();
-        assert!(ep.contains("wind_input"));
+        assert!(ep.contains("moodflow_rpc"));
         assert!(ep.contains("_ctrl"));
     }
 
@@ -485,14 +485,14 @@ mod tests {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         // 覆盖 release（空后缀）与 dev 两种变体。
         for suffix in ["", "_dev"] {
-            unsafe { std::env::set_var("WIND_PIPE_SUFFIX", suffix) };
+            unsafe { std::env::set_var("MOODFLOW_PIPE_SUFFIX", suffix) };
             assert_eq!(
                 super::events_endpoint(),
                 wind_rpc::events_endpoint(suffix),
                 "事件端点与 core 漂移(suffix={suffix:?})"
             );
         }
-        unsafe { std::env::remove_var("WIND_PIPE_SUFFIX") };
+        unsafe { std::env::remove_var("MOODFLOW_PIPE_SUFFIX") };
     }
 
     /// mockdata 中刻意偏离 core 系统预置的值（配套 [`mock_config_matches_core_system_preset`]）。
@@ -500,7 +500,7 @@ mod tests {
     /// `schema.available` 必须与 mock 的 `schema.list` 自洽（那里给的是 wubi86 / wubi98 /
     /// wubi_mixed / pinyin_simp 这套演示方案），不能取真实预置的 wubi86_pinyin——
     /// 否则 mock 模式的方案下拉会列出一个 `schema.list` 里不存在的 id。
-    const CURATED_MOCK_VALUES: &[&str] = &["schema.available"];
+    const CURATED_MOCK_VALUES: &[&str] = &["schema.available", "schema.active"];
 
     /// 把 JSON 摊平成「点分路径 → 叶子值」（规则同 core 的 collect_leaf_keys：
     /// 非空对象下钻，数组与空对象作叶子）。
@@ -533,7 +533,7 @@ mod tests {
     /// 失败时请重新生成 mockdata，而不是逐个手改。
     #[test]
     fn mock_config_matches_core_system_preset() {
-        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../WindInput/data");
+        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../Moodflow/data");
         let preset =
             wind_config::Config::system_preset_value(Some(&data)).expect("读取 core 系统预置失败");
         let cfg: wind_config::Config = preset.try_into().expect("系统预置反序列化为 Config 失败");
@@ -584,9 +584,8 @@ mod tests {
         use serde::Serialize;
 
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        let preset =
-            wind_config::Config::system_preset_value(Some(&root.join("../WindInput/data")))
-                .expect("读取 core 系统预置失败");
+        let preset = wind_config::Config::system_preset_value(Some(&root.join("../Moodflow/data")))
+            .expect("读取 core 系统预置失败");
         let cfg: wind_config::Config = preset.try_into().expect("系统预置反序列化为 Config 失败");
         let mut fresh = serde_json::to_value(&cfg).expect("Config 序列化失败");
 
@@ -611,7 +610,7 @@ mod tests {
     /// 守护：策展名单不能腐烂——列进去的键必须真的与预置不同，否则说明它已可回归自动对账。
     #[test]
     fn curated_mock_values_still_differ() {
-        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../WindInput/data");
+        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../Moodflow/data");
         let preset = wind_config::Config::system_preset_value(Some(&data)).expect("读取预置失败");
         let cfg: wind_config::Config = preset.try_into().expect("反序列化失败");
         let expect = serde_json::to_value(&cfg).expect("序列化失败");
@@ -1079,7 +1078,7 @@ thread_local! {
     /// 变了」，故给它一个显式的、测试主动摆值的开关，不用不可控的调用计数
     /// （那会让恰好共享同一测试线程的其它用例被悄悄牵连，破坏「测试要确定性」）。
     static MOCK_FOLLOWED_LAYOUT: std::cell::Cell<Option<&'static str>> =
-        std::cell::Cell::new(None);
+        const { std::cell::Cell::new(None) };
 }
 
 /// 供测试设置/清空上面那个顶替值。测试用完必须传 `None` 清空，否则会漏到下一个用例。
@@ -1276,7 +1275,7 @@ fn mock_stats_summary() -> Value {
         })
         .sum();
     let active_sec: u64 = days.iter().map(|d| num(d, "as")).sum();
-    let speed = |chars: u64, secs: u64| if secs == 0 { 0 } else { chars * 60 / secs };
+    let speed = |chars: u64, secs: u64| chars.saturating_mul(60).checked_div(secs).unwrap_or(0);
 
     json!({
         "today_chars": today_chars,
@@ -1284,7 +1283,7 @@ fn mock_stats_summary() -> Value {
         "today_english": num(&last, "ec"),
         "total_chars": total_chars,
         "active_days": active_days,
-        "daily_avg": if active_days > 0 { total_chars / active_days } else { 0 },
+        "daily_avg": total_chars.checked_div(active_days).unwrap_or(0),
         "streak_current": streak_current,
         "streak_max": streak_max,
         "week_chars": week_chars,
@@ -1666,7 +1665,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
         // 改成 null 或整个删掉即可（两者对 UI 等价，见 `custom_edition_badge`）。
         "system.info" => json!({
             "version": "3.2.1", "platform": "windows", "arch": "x86_64",
-            "build": "release", "dataDir": "C:/Users/.../WindInput", "running": true,
+            "build": "release", "dataDir": "C:/Users/.../Moodflow", "running": true,
             "customEdition": {
                 "id": "huma-edition", "name": "虎码定制版",
                 "version": "1.2", "baseVersion": "0.119.0"
@@ -1723,7 +1722,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
                 .and_then(|v| v.as_str())
                 .unwrap_or("my_class_1");
             let path = std::env::temp_dir()
-                .join("WindInput")
+                .join("Moodflow")
                 .join("charsets")
                 .join(format!("{key}.yaml"));
             json!({
@@ -1741,7 +1740,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
                 .and_then(|v| v.as_str())
                 .unwrap_or("my_class_1");
             let path = std::env::temp_dir()
-                .join("WindInput")
+                .join("Moodflow")
                 .join("charsets")
                 .join(format!("{key}.yaml"));
             let _ = std::fs::create_dir_all(path.parent().unwrap());
@@ -1768,7 +1767,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
             { "code": "yx", "text": "example@example.com", "weight": 1000, "position": 0, "enabled": true, "isSystem": false }
         ], "total": 2 }),
         "phrase.export" => {
-            json!({ "content": "# WindInput 用户数据文件\nwind_dict:\n  version: 1\n\n--- !phrases\nbj\t北京\t1000\t0\t1\n" })
+            json!({ "content": "# Moodflow 用户数据文件\nwind_dict:\n  version: 1\n\n--- !phrases\nbj\t北京\t1000\t0\t1\n" })
         }
         "phrase.import" => json!({ "imported": 0, "skipped": 0 }),
         // 短语分发格式预览。夹具覆盖四种行态：普通、命令、遮蔽系统短语，
@@ -1827,7 +1826,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
             ]}
         ]),
         "quick.export" => json!({
-            "content": "# WindInput 快捷输入 · 用户设置\n\n[[formats]]\nid = 'date.u1'\nkind = 'date'\ntext = '$Y/$M/$D'\nposition = 0\n\n[[adjust]]\nkind = 'date'\ndisabled = ['date.basic']\n"
+            "content": "# Moodflow 快捷输入 · 用户设置\n\n[[formats]]\nid = 'date.u1'\nkind = 'date'\ntext = '$Y/$M/$D'\nposition = 0\n\n[[adjust]]\nkind = 'date'\ndisabled = ['date.basic']\n"
         }),
         "quick.previewImport" => {
             json!({ "moved": 1, "disabled": 1, "formats": 1, "skipped": [], "kinds": ["date"] })
@@ -1857,7 +1856,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
             "display_name": "测试主题",
             "name": "测试主题",
             "version": "1.0.0",
-            "author": "WindInput"
+            "author": "Moodflow"
         }),
         // 主题文本里含哨兵 MOCK_EXISTING 且未 force ⇒ 回同名冲突回执，供覆盖确认链路的
         // 单测使用。真 core 的判据是目录已存在，mock 无文件系统，只能靠哨兵表达这个分支。
@@ -1890,7 +1889,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
         // 于是「撞名转覆盖确认」那条判断在两种来源上能用同一套用例验。
         "theme.previewPackage" => json!({
             "display_name": "测试主题",
-            "author": "WindInput",
+            "author": "Moodflow",
             "version": "1.0",
             "asset_count": 2,
             "has_preview": true
@@ -1938,7 +1937,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
         }),
         "theme.getText" => json!({
             "slug": "default",
-            "toml": "base = \"_qingfeng\"\n\n[meta]\nname = \"清风·蓝\"\nversion = \"1.0\"\nauthor = \"清风输入法\"\n"
+            "toml": "base = \"_qingfeng\"\n\n[meta]\nname = \"清风·蓝\"\nversion = \"1.0\"\nauthor = \"Moodflow 输入法\"\n"
         }),
         // mockdata 就是「无用户层的系统预置」，正是 getDefaults 的语义，故直接复用。
         // 此前这里返回空对象，Config::from_value({}) 拿不到任何值——mock 模式下
@@ -1984,7 +1983,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
                     },
                         // 拼音族有辅助码表（对齐真实方案，如全拼配笔画、双拼配小鹤形码）——
                         // 给个非空 files 让 `has_aux_code_table` 判真，`SettingsSection::AuxCode`
-                        // 才在 `WIND_RPC_MOCK=1` 下有得看，不然这一节永远建不出来。
+                        // 才在 `MOODFLOW_RPC_MOCK=1` 下有得看，不然这一节永远建不出来。
                         "aux_code": { "files": ["aux_code/bihua.txt"] }
                     },
                     // 方案文件自己声明的来源（core 旁路字段，不含 override）。与上面合并后的
@@ -1995,7 +1994,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
             }
         }
         // 辅助码来源的可选项（对齐核心 `schema.auxCodeSources`）：码表方案 + aux_code/*.txt。
-        // 名字给中文，下拉与跟随档文字在 `WIND_RPC_MOCK=1` 下才有得看。
+        // 名字给中文，下拉与跟随档文字在 `MOODFLOW_RPC_MOCK=1` 下才有得看。
         "schema.auxCodeSources" => json!({
             "schemas": [
                 { "id": "wubi86", "name": "五笔 86" },
@@ -2069,7 +2068,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
         }
         // 词库多段导入导出（sections 契约,形状对齐 core webdata.rs）。
         "dict.export" => {
-            json!({ "content": "# WindInput 用户数据文件\nwind_dict:\n  version: 1\n  sections:\n    words:\n      columns: [code, text, weight, count]\n    shadow:\n      columns: [action, code, word, position, cand_id]\n\n--- !words\naaaa\t工\t0\t3\n\n--- !shadow\npin\tggkg\t王中\t0\t\n" })
+            json!({ "content": "# Moodflow 用户数据文件\nwind_dict:\n  version: 1\n  sections:\n    words:\n      columns: [code, text, weight, count]\n    shadow:\n      columns: [action, code, word, position, cand_id]\n\n--- !words\naaaa\t工\t0\t3\n\n--- !shadow\npin\tggkg\t王中\t0\t\n" })
         }
         // 目标是拼音方案时给出**带准入契约计数**的样例，否则维持原来的码表样例。
         // 两种形状都要能离线看到：那一行「音节分隔」的二选一只在拼音下出现，
@@ -2198,7 +2197,7 @@ pub(crate) fn mock_reply(method: &str, params: &Value) -> Value {
         // 整机备份（P4 契约）。
         "backup.create" | "backup.inspect" => json!({
             "path": "C:/tmp/backup.zip",
-            "manifest": { "format": "windinput-bundle", "kind": "backup", "spec_version": 1,
+            "manifest": { "format": "moodflow-bundle", "kind": "backup", "spec_version": 1,
                           "app_version": "0.0.0", "platform": "windows", "created_at": "2026-07-13T00:00:00+08:00",
                           "contents": [
                               { "type": "config", "path": "config/config.toml", "meta": null },

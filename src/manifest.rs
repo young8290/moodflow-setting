@@ -257,10 +257,10 @@ impl Manifest {
     ///
     /// 返回一项都没命中的 `key:` 选择器原文，供调用方记 WARN：定制者拼错键名、或设置项在
     /// 新版里改了名，现象都是「写了 hide 但那一项还在」，没有这条日志就只能猜。
-    pub fn apply_custom_hide(&mut self, hide: &wind_config::SettingsHide) -> Vec<String> {
+    pub fn apply_custom_hide(&mut self, hide: &crate::custom_hide::SettingsHide) -> Vec<String> {
         let mut unmatched = Vec::new();
         for sel in hide.selectors() {
-            let wind_config::SettingsSelector::Key { pattern, prefix } = sel else {
+            let crate::custom_hide::SettingsSelector::Key { pattern, prefix } = sel else {
                 continue;
             };
             let mut hit = false;
@@ -576,10 +576,12 @@ pub(crate) const RENDERABLE_CONTROL_TYPES: &[&str] = &[
     "log_level_select",
     "open_log_dir",
     "log_privacy_warning",
+    "note",
 ];
 
 fn build_control(state: &AppState, key: &str, item: &MItem, cfg: &Config) -> Element {
     match item.typ.as_str() {
+        "note" => Element::label(item.hint.as_deref().unwrap_or("")),
         "toggle" => build_toggle(state, key, item, cfg),
         "toggle_slash_dun" => build_toggle_slash_dun(state, key, cfg),
         "select" => build_select(state, key, item, cfg),
@@ -3119,6 +3121,7 @@ fn dialog_extra_keys(state: &AppState, host_key: &str) -> Vec<String> {
 ///   `keys.key_actions`，而 `getDefaults` 返回的是**未折算**的系统预置 ⇒ 那张表恒为 `{}`。
 ///   引导键类字段的 loader 读的正是它，不补的话恢复后快捷输入的 `;`、临拼的 `` ` ``
 ///   一并消失，而**清空即禁用**。见 [`seed_key_action_defaults`]。
+///
 /// ⚠️ `seed` 由 [`key_action_default_bindings`] **提前算好**再传进来：本函数的调用方多为
 /// `'static` 闭包，握不住 `&AppState`；而这份绑定只依赖清单与 capability，二者在进程内
 /// 不变，提前算与延后算等价。
@@ -5795,7 +5798,7 @@ mod tests {
     /// `default`：真正被 writer 拿去比对的是前者，后者只是 mock 模式的兜底。
     #[test]
     fn number_widget_ranges_contain_core_defaults() {
-        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../WindInput/data");
+        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../Moodflow/data");
         let preset =
             wind_config::Config::system_preset_value(Some(&data)).expect("读取 core 系统预置失败");
         let cfg: wind_config::Config = preset.try_into().expect("系统预置反序列化失败");
@@ -6548,7 +6551,6 @@ mod tests {
             "ui.toolbar.hide_in_english",
             "ui.toolbar.vertical",
             "input.capslock.cancel_on_mode_switch",
-            "input.capslock.mode_after_cancel",
             "stats.track_english",
         ] {
             let item = m.items.get(k).unwrap_or_else(|| panic!("清单缺 {k}"));
@@ -7510,7 +7512,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let app = Rc::new(RefCell::new(crate::state::AppState::empty()));
         let st = app.borrow();
@@ -7617,7 +7619,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let app = Rc::new(RefCell::new(crate::state::AppState::empty()));
         let st = app.borrow();
@@ -7685,7 +7687,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let app = Rc::new(RefCell::new(crate::state::AppState::empty()));
         let st = app.borrow();
@@ -7841,7 +7843,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let st = crate::state::AppState::empty();
         let keys_of = |sec: &str| -> Vec<String> {
             st.manifest
@@ -7976,7 +7978,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let st = crate::state::AppState::empty();
         let src = foreign_sources(&st);
@@ -8024,7 +8026,7 @@ mod theme_follow_row_tests {
     /// 而不是退化成「恒满足」。平台门控的项保持原有的宽松行为。
     #[test]
     fn enabled_when_follows_config_of_custom_hidden_gate() {
-        let (h, errors) = wind_config::SettingsHide::parse(&["key:stats.enabled"]);
+        let (h, errors) = crate::custom_hide::SettingsHide::parse(&["key:stats.enabled"]);
         assert!(errors.is_empty());
         let mut st = crate::state::AppState::empty();
         st.manifest = crate::custom_hide::settings_manifest(&h, false);
@@ -8233,14 +8235,14 @@ mod comment_template_escape_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.base_config = Config::from_value(cfg.clone());
         st.current_config = Config::from_value(cfg);
         let c = st.current_config.clone();
         let sig = comment_template_signal(&st, COMMENT_HOST_KEY, &c);
         f(&st, sig);
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     fn cfg_with(tpl: &str) -> serde_json::Value {

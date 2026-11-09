@@ -1125,7 +1125,7 @@ mod tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let import = ConfigImportState::new();
         let mgr = SchemaManagerState::new();
@@ -1137,7 +1137,7 @@ mod tests {
             std::path::PathBuf::from(r"C:\down\a.wtheme"),
         );
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(sig.visible.get(), "首次导入必须先弹确认，不能直接装");
         let msg = sig.msg.get();
         assert!(msg.contains("测试主题"), "确认框要说清装的是什么：{msg}");
@@ -1204,7 +1204,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let app = Rc::new(RefCell::new(AppState::empty()));
         let (import, mgr) = {
             let st = app.borrow();
@@ -1430,7 +1430,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let import = ConfigImportState::new();
         let mgr = SchemaManagerState::new();
 
@@ -1459,7 +1459,7 @@ mod tests {
             import.info_title.get().is_empty() && import.info_desc.get().is_empty(),
             "重开对话框须清空说明"
         );
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     // ──────────── 显示防护：说明是分发者提供的任意文本，UI 侧必须自己封顶 ────────────
@@ -1672,7 +1672,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let import = ConfigImportState::new();
         let mgr = SchemaManagerState::new();
         // 记号让 mock 把说明撑到 core 限额上限（title 200 / description 4000）。
@@ -1687,7 +1687,7 @@ mod tests {
         assert_eq!(title_h, one_line_h, "限额标题仍是一行");
         assert_eq!(desc_h, INFO_DESC_MAX_H, "限额说明仍封顶");
         assert!(content_h > INFO_DESC_MAX_H, "且留下可滚动量");
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 包内 `configPatch` 与 previewPatch 的 entries 同形，缺席即纯方案包。

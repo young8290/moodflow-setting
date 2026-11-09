@@ -1,7 +1,7 @@
 //! 「高级 → 性能与诊断」里的内存诊断（只读，core `system.memoryStats`）。
 //!
 //! 用途是让用户反馈「输入法占内存」时能直接贴数，回答「涨的是哪一档」：进程私有内存、
-//! 已加载的方案、各懒建结构自报的大小（设计 `WindInput/docs/design/memory-footprint.md` §8）。
+//! 已加载的方案、各懒建结构自报的大小（设计 `Moodflow/docs/design/memory-footprint.md` §8）。
 //!
 //! 分区里只有一行摘要 +「诊断信息…」按钮；全部明细在对话框里，「复制」复制的就是对话框
 //! 正显示的那份文本——以后要加诊断项，只改 [`diagnostic_text`] 一处。
@@ -312,7 +312,7 @@ pub(crate) fn parts_text(v: &Value) -> String {
     }
 }
 
-const HEADER: &str = "[清风输入法 内存诊断]";
+const HEADER: &str = "[Moodflow 输入法 内存诊断]";
 
 /// 对话框正文 = 「复制」的全文。只含方案 id 与数字，不含用户内容。
 ///
@@ -650,7 +650,8 @@ mod tests {
     fn manifest_section_matches_constant() {
         let m = crate::manifest::Manifest::from_embedded();
         assert_eq!(
-            m.get("schema.keep_all_loaded").map(|i| i.section.as_str()),
+            m.get("local.memory.runtime_note")
+                .map(|i| i.section.as_str()),
             Some(SECTION)
         );
         assert!(m.sections_of("advanced").iter().any(|(s, _)| s == SECTION));
@@ -681,7 +682,7 @@ mod tests {
     fn failure_reason_drops_endpoint_and_user_name() {
         assert_eq!(
             redact(
-                r"连接 core 失败 (\\.\pipe\wind_input_ctrl_dev): 系统找不到指定的文件。 (os error 2)",
+                r"连接 core 失败 (\\.\pipe\moodflow_core_ctrl_dev): 系统找不到指定的文件。 (os error 2)",
                 None
             ),
             "连接 core 失败：系统找不到指定的文件。 (os error 2)"

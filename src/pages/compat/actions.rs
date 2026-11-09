@@ -352,20 +352,24 @@ impl CompatState {
 mod tests {
     use super::*;
 
-    struct MockGuard(std::sync::MutexGuard<'static, ()>);
+    struct MockGuard {
+        _guard: std::sync::MutexGuard<'static, ()>,
+    }
     impl MockGuard {
         fn new() -> Self {
             let g = crate::rpc::ENV_LOCK
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
-            unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+            unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
+            crate::pages::compat::mock::advanced_ui_fixtures(true);
             let _ = crate::rpc::take_mock_calls();
-            MockGuard(g)
+            MockGuard { _guard: g }
         }
     }
     impl Drop for MockGuard {
         fn drop(&mut self) {
-            unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+            unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
+            crate::pages::compat::mock::advanced_ui_fixtures(false);
         }
     }
 

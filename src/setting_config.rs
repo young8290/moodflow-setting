@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SettingConfig {
     #[serde(default)]
     pub theme_editor: ThemeEditorConfig,
@@ -51,7 +51,7 @@ fn default_log_level() -> String {
     "info".to_string()
 }
 
-/// `windinput://` 协议关联的偏好。
+/// `moodflow://` 协议关联的偏好。
 ///
 /// 与「注册表当前指向谁」是两回事：注册表是**事实**（每次都现读，见
 /// [`crate::protocol::current_registration`]），这里只记**用户的意愿**。
@@ -108,7 +108,7 @@ pub struct UiStateConfig {
     pub look: crate::look::LookConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ThemeEditorConfig {
     #[serde(default)]
     pub auto_start: bool,
@@ -140,19 +140,6 @@ fn default_true() -> bool {
     true
 }
 
-impl Default for SettingConfig {
-    fn default() -> Self {
-        Self {
-            theme_editor: ThemeEditorConfig::default(),
-            update: UpdateConfig::default(),
-            ui: UiStateConfig::default(),
-            protocol: ProtocolConfig::default(),
-            file_assoc: FileAssocConfig::default(),
-            log: LogConfig::default(),
-        }
-    }
-}
-
 impl Default for ProtocolConfig {
     fn default() -> Self {
         Self { self_heal: true }
@@ -162,12 +149,6 @@ impl Default for ProtocolConfig {
 impl Default for FileAssocConfig {
     fn default() -> Self {
         Self { self_heal: true }
-    }
-}
-
-impl Default for ThemeEditorConfig {
-    fn default() -> Self {
-        Self { auto_start: false }
     }
 }
 
@@ -194,7 +175,7 @@ const CONFIG_FILE_NAME: &str = "wind_setting.toml";
 
 /// 本文件与 core 的 `config.toml` **同目录**，目录选择完全交给 [`crate::user_dir`]：
 /// 便携 → `<exe 目录>\userdata\`；自定义数据目录 → `datadir.conf` 里那个路径；
-/// 否则 → `%APPDATA%\WindInput[Dev]`（macOS `~/Library/Application Support/WindInput[Dev]`）。
+/// 否则 → `%APPDATA%\Moodflow[Dev]`（macOS `~/Library/Application Support/Moodflow[Dev]`）。
 ///
 /// 这里不再自己拼 `dirs::config_dir()`：那样只覆盖第三种形态，便携包与自定义数据目录
 /// 的用户会出现「输入法读 A、设置程序写 B」，表现为设置项存了但下次启动读不回来。
@@ -279,7 +260,7 @@ mod tests {
         let dir = crate::user_dir::default_user_dir_from_base(Some(base.clone()), AppMode::Release);
         assert_eq!(
             config_path_in_dir(dir.unwrap()),
-            base.join("WindInput").join("wind_setting.toml")
+            base.join("Moodflow").join("wind_setting.toml")
         );
     }
 
@@ -289,12 +270,12 @@ mod tests {
         let dir = crate::user_dir::default_user_dir_from_base(Some(base.clone()), AppMode::Dev);
         assert_eq!(
             config_path_in_dir(dir.unwrap()),
-            base.join("WindInputDev").join("wind_setting.toml")
+            base.join("MoodflowDev").join("wind_setting.toml")
         );
     }
 
     /// 便携部署下配置与 core 的 `config.toml` 并排躺在 `<exe 目录>\userdata\`，
-    /// **不带**变体子目录 —— 多拼一层 `WindInput` 就会与输入法读的位置错开。
+    /// **不带**变体子目录 —— 多拼一层 `Moodflow` 就会与输入法读的位置错开。
     #[test]
     fn portable_config_path_sits_in_userdata_root() {
         let dir = crate::mode::portable_userdata_dir().expect("测试进程必能定位自身 exe");
@@ -329,7 +310,7 @@ mod tests {
         let path = config_path_in_dir(dir);
         // Path::ends_with 按**组件**比较，两个平台上都成立。
         assert!(
-            path.ends_with("WindInput/wind_setting.toml"),
+            path.ends_with("Moodflow/wind_setting.toml"),
             "{}",
             path.display()
         );
@@ -340,14 +321,14 @@ mod tests {
         );
     }
 
-    /// macOS 上落在 `~/Library/Application Support/WindInput[Dev]`，
+    /// macOS 上落在 `~/Library/Application Support/Moodflow[Dev]`，
     /// 与 core 的 `Config::user_config_dir()` 同一个目录 —— 两边不得各写各的。
     #[cfg(target_os = "macos")]
     #[test]
     fn macos_config_path_matches_core_user_config_dir() {
         let home = std::env::var("HOME").expect("macOS 必有 HOME");
         let expected = std::path::PathBuf::from(home)
-            .join("Library/Application Support/WindInputDev/wind_setting.toml");
+            .join("Library/Application Support/MoodflowDev/wind_setting.toml");
         let dir = crate::user_dir::default_user_dir_from_base(dirs::config_dir(), AppMode::Dev);
         assert_eq!(config_path_in_dir(dir.unwrap()), expected);
     }

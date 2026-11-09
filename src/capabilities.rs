@@ -314,222 +314,89 @@ mod tests {
     /// core 新增键让计数超标时，把数字改大就能过，于是旁边那段分类注释一路过期
     /// （写着「当前 13 项」而实际 26 项），谁也说不清多出来的到底是哪些、该不该暴露。
     /// 改为显式名单后，任何一个新的未覆盖键都必须在此处具名登记，顺带写清为什么不暴露。
+    // The input engine's tuning fields remain configurable in config.toml. Moodflow tool,
+    // privacy, Buffer, chord, clipboard and plugin settings are owned by the Hub/floating UI.
+    // This exact set is regenerated from the actual Moodflow core; the guard below still
+    // rejects any new undocumented key or stale exemption.
     const UNCOVERED_BY_DESIGN: &[&str] = &[
-        // ① 方案管理：由方案页的输入方案列表承载，不作为普通设置项。
-        //    active   → 工具栏「设为当前」+ 行内「当前」徽章（schema.setActive 即时
-        //               生效，配置值由 state.rs 注册的 writer 随保存写回）；
-        //    available→ 行内启用勾选 + ↑↓ 排序，同样经 writer 写回。
-        "schema.active",
-        "schema.available",
-        // ③ 短语前缀列举：开关暂无作用，待 core 决定后再处理。
-        "input.phrase.min_prefix",
-        // ④ 非独立清单项：由各功能键的「全局」勾选经收集器汇总写回。
-        "keys.global_hotkeys",
-        // ⑤ 临时英文不再设独立启用开关（Shift+字母 始终可进入、触发键可留空）。
-        "input.temp_english.enabled",
-        // ⑥ 外观不支持 / 平台限制项，均由 core 维持默认值。
-        "ui.font.path",
-        "ui.font.render_mode",
-        // ⑦ 命令栏始终开启，不提供关闭入口。
-        "input.cmdbar.enabled",
-        // ⑧ 词频打分模型的两个残留系数：**改动无任何效果**，故不暴露。
-        //    core 改用位置提升模型后，配置项 → FreqProfile 字段 → pinyin_score 整条链已无
-        //    生产调用者（位置模型只取 decay_factor，不打分）。core 侧已在 data/config.toml
-        //    与函数文档上标注，保留仅为将来若恢复打分模型可复用。
-        //
-        //    ⚠️ **不能因为「词频参数都该放一起」就把它俩也接进设置页**：调频的其余参数
-        //    （enabled / strategy / promote_prefix / half_life ×2 / protect_top_n* /
-        //    english_code_scope）都已在清单内，唯独这两个是死链。放上去等于给用户两个拧了
-        //    没反应的旋钮，比不放更糟。要放的前提是 core 先恢复打分模型。
-        //    见 core 的 docs/design/freq-rerank-model.md §9.1.2。
-        "schema.pinyin.frequency.base_scale",
-        "schema.pinyin.frequency.recency_peak",
-        // ⑨ （已撤出豁免）schema.pinyin.auto_learn.promote_count 现已在清单内：出厂 0 = 不
-        //    晋升，不暴露就等于拼音自动学到的词永远出不了临时词库，而设置页原来的 hint
-        //    还写着「加入用户词库」。码表侧的 auto_phrase.promote_count 一直是暴露的。
-        // ⑨' 码表造词的兜底与容量参数，普通用户无判断依据，需要时改配置文件。
-        //    注：min_phrase_len / max_phrase_len 已在清单内（hidden=true）。
-        "schema.codetable.auto_phrase.idle_timeout_ms",
-        "schema.codetable.auto_phrase.temp_max_entries",
-        // ⑨''' 滑窗草稿层的三个内部参数（core 的
-        //     docs/design/auto-phrase-draft-layer.md）。草稿是自动造词滑窗切出的猜测词，
-        //     用户用过一次才转正进临时词库——这三项是它的有效期、容量与落库批量。
-        //     同 ⑨' 的判据：普通用户无判断依据，且 draft_max_entries / draft_flush_batch
-        //     的默认值目前还是**纸面估算**、待真机数据重定，此时暴露出去只会把一个未定的
-        //     数字固化进用户配置文件。**待实测调参后再评估**要不要暴露。
-        "schema.codetable.auto_phrase.draft_ttl_hours",
-        "schema.codetable.auto_phrase.draft_max_entries",
-        "schema.codetable.auto_phrase.draft_flush_batch",
-        // ⑨'''' 快捷输入历史的条数上限（候选来源 `quick_input.history` 配套，出厂 1000、
-        //       0 = 不限）。同 ⑨' 的判据：容量参数普通用户无判断依据，出厂值足够宽，且
-        //       历史本身已能在「词库 → 输入补全 → 快捷输入历史」逐条删 / 清空。需要时改配置文件。
-        "schema.quick_input.history_max",
-        // ⑨''''' 英文自动造词的临时词库容量（出厂 5000）。core 侧标注为内部字段；同 ⑨' 的判据：
-        //        容量参数普通用户无判断依据，出厂值足够宽，临时词条也能在「词库 → 英文 → 临时
-        //        词库」逐条删。开关与晋升次数已在清单内（英文行为 → 自动造词）。
-        "schema.english.auto_learn.temp_max_entries",
-        // ⑨'' 码元字符集：core 的 REGISTRY 已注册（config_schema.rs），但消费侧仍在开发中，
-        //     暂不接入设置界面。**待 core 定稿后再评估**该不该暴露、放全局清单还是方案对话框。
-        "schema.codetable.input_chars",
-        "schema.codetable.leading_chars",
+        "chord.enabled",
+        "chord.keymap",
+        "clipboard.enabled",
+        "clipboard.max_entries",
+        "clipboard.retention_days",
         "debug.log_max_files",
         "debug.log_max_size_mb",
-        "input.temp_pinyin.enabled",
-        "input.temp_pinyin.hotkey",
-        // 候选窗首显时序调参（core 侧候选窗改造新增）：判断依据是宿主的绘制时序，
-        // 普通用户无从判断，需要时改配置文件。接不接进设置页待 core 侧定稿后评估。
-        // fast_first_show_fallback_ms 在 core 侧的字段注释里明确标注为「内部选项」，
-        // 取值依据是特定宿主（Word/记事本）的坐标下发时序，不具备可暴露性。
-        "ui.candidate.first_show_settle_ratio",
-        "ui.candidate.fast_typing_window_ms",
-        "ui.candidate.fast_first_show_fallback_ms",
-        // ⑪ 内部/实验项：顶码上屏的宿主时序策略，仅在宿主表现异常时改配置文件。
-        "input.top_commit_mode",
-        // ⑪'' 内部项：顶屏（标点 / 非码元字符 / 进临时模式）上屏时是否造词、推临时词晋升计数，
-        //      出厂开。是否让顶屏参与学习属产品口径，普通用户无需调，需要时改配置文件。
-        "input.top_commit_learn",
-        // ⑪''' 内部项：宿主报出密码 InputScope 时强制英文，出厂开。入口是托盘 / 工具栏右键的
-        //      「高级 → 密码框强制英文」（菜单切换即写盘），不进设置页；只有宿主误报密码位
-        //      （t197，掩码 0x80000001）时才需要关。
-        "input.password_force_english",
-        // ⑪' 打字速度的修正系数（core 侧速度模型 v2 新增）：采集期已修掉三条结构性偏差
-        //     （毫秒分母 / 段首口径对称 / 短码长词封顶），这个系数只补最后一条——输入法
-        //     无从知道用户打错了没有，退格重打的字符计两遍而耗时只算一遍。
-        //
-        //     不暴露的判据仍是「调它需要什么依据」：用户手上没有任何可对照的真值
-        //     （要对照就得同时开着测速软件打同一段文字），放个滑块出去只会变成
-        //     「嫌速度低就调大」，而调大恰恰让显示值重新偏离真实手速。core 侧 data/config.toml
-        //     有完整注释，需要的人改配置文件。
-        "stats.speed_factor",
-        // ⑫ 拖动落盘的绝对坐标：由用户拖动窗口写入，手填既不直观又会与拖动互相覆盖，
-        //    故刻意不在设置页暴露（与 core 侧同一决策）。
-        "ui.candidate.custom_x",
-        "ui.candidate.custom_y",
-        "ui.status.custom_x",
-        "ui.status.custom_y",
-        // ⑬ 配对状态时效秒数（core 侧跨模式跳出改造新增，内部项）：兜底「用户中途用鼠标
-        //    点走、把括号退格删掉」这类输入法感知不到的操作。取值依据是人的操作节奏，
-        //    普通用户无判断依据，需要时改配置文件。
-        "input.auto_pair.state_ttl_secs",
-        // ⑭ 加词面板的候选布局（core 侧模式级候选布局改造新增）：加词面板没有独立设置
-        //    分区，且它逐字确认的两行提示本就该竖排——出厂 vertical 即最优解，横排没有
-        //    使用场景。同批的临拼/临英/网址/快捷四项都已进清单，只有它刻意不暴露。
         "input.add_word.candidate_layout",
-        // ㉓ 候选窗定位方式（core 新增 `[input.caret]`，2026-09-15）：**排障开关，不是偏好**。
-        //    这几个模式由热键激活、激活瞬间无输入内容，却要立刻显示候选窗，于是靠一个占位
-        //    composition 把 range 撑开好让 GetTextExt 出矩形；而那个占位建在当前 selection 上，
-        //    用户选中着文字时会把选中内容替换掉（t123）。关掉它则坐标退到 GUITHREADINFO/
-        //    GetCaretPos 回退链 —— 但很多宿主的那几个 API 给不出正确坐标，关了会换来候选窗错位。
-        //    也就是说这四项没有「更好」的一侧，只有「在你这台机器的这个宿主上哪边代价小」，
-        //    普通用户无从判断。出厂值 core 已按场景各自定过：**加词 false**（t123 报的就是它
-        //    吃掉选中内容，而加词弹的是预览窗、对坐标精度的敏感度低于候选列表），其余三项 true。
-        "input.caret.add_word_via_composition",
-        "input.caret.temp_pinyin_via_composition",
-        "input.caret.special_via_composition",
-        "input.caret.rare_char_via_composition",
-        // ㉔ 上屏换行形式的全局默认档（core `input.commit_newline`；本仓快照此前一直漏登记，
-        //    2026-09-16 重新生成快照时才补进来）：**不是偏好，是宿主适配**。core 的
-        //    `NewlineStyle` 写明了为什么没有全局正确值——富文本宿主（Word / WPS / RichEdit）
-        //    的段落边界**就是** CR，LF 在那个模型里根本不构成换行；而 VS Code / 终端 /
-        //    textarea 是字节即存储，做任何转换都是在改写用户的数据（t112 那个「正则直通后
-        //    行尾从 LF 变成 CR」正是这么来的），且这种失败是静默的。
-        //    真正该配的是 **per-app 覆盖**（`compat.toml` 的 `[[commit_newline]]` 段，属另一
-        //    份 schema，不归本清单管）；这里这个只是全局兜底档，出厂 `keep` ＝「不知道宿主
-        //    要什么的时候不动用户数据」。把它摆到界面上，等于请普通用户在看不见后果的地方
-        //    赌一把——赌输的那一侧还是静默的。
-        "input.commit_newline",
-        // ⑮ 候选注释词库挂载列表 **已接入清单**（`dialog_button_comment_dicts`，
-        //    2026-08-26），故从本名单移除。它当年登记的理由写的就是「待接入，不是设计上
-        //    不暴露」——那条自陈是这次动手的直接依据。⚠️ 本名单是**双向**断言：接进清单
-        //    后若还留在这里，`uncovered_capability_keys_match_allowlist` 会以 stale 报红。
-        // ⑯ `keys.schema_hotkeys` 已从这份白名单**移除**：core 侧该键已废弃并移出登记表
-        //    （并入 `keys.key_actions` 的 `switch_schema:<方案id>`）。方案页「进入方式」
-        //    那一节现在读写的是 key_actions，而它就在下面一条里，理由完全相同。
-        // ⑰ 任务栏图标角标的九项（core 侧语言栏图标改造新增）**已全部接入清单**，故本名单
-        //    里一条不剩。当年不暴露的理由是"这些量只能盯着 16×16 反复比对、放进去等于给
-        //    用户一排盲调旋钮"，2026-09-01 改成规则表时逐条推翻：配色有色块可看，大小与
-        //    透明度是用户明确要的自由度。
-        //
-        //    其中 badge_alpha 曾单独留守，理由是它同时是**档位开关**（= 1.0 走实心挖空、
-        //    < 1.0 走半透明保留主字，两条互斥的画法），滑块表达不了那个跳变。推翻它的判据
-        //    是**两害相权**：一个用户看不见也改不了的出厂 0.88，比一个末端有跳变、但跳变
-        //    已写进 hint 的滑块更糟。跳变本身没有消失——改 hint 时别把那句话删了。
-        // ⑱ 联想的四个「来源开关」（core 侧联想改造新增）：主干六项已在清单内，这四项决定
-        //    联想候选**从哪来**，按配置文件里的书写顺序取配额。
-        //
-        //    bigram 是**尚无实现**的来源，开着也不会出候选——与 ⑧ 的两个死链系数同一处理：
-        //    给用户拧了没反应的旋钮，比不放更糟。等数据来源落地后再评估。
-        //    history（联想历史，2026-09 已实现）出厂开、只学用户自己从联想里选过的词，
-        //    没有「需要关它」的常见诉求；清数据走「清空词频」，故仍不放开关。
-        //
-        //    prefix / punct 已有实现，仍不暴露，判据是「调它需要什么依据」：
-        //    - prefix 是词语联想档的**唯一**来源，关掉它等于把「联想类型 = 词语联想」变成空转,
-        //      而用户已经有「联想类型 = 关闭」这个正主，两个入口关同一件事只会让人误关；
-        //    - punct 只在智能联想档有意义（词语联想按定义不出标点），而智能联想档是移动端
-        //      默认、桌面端要显式选——为一个桌面端少数人才会进入的档位挂一个常驻开关，
-        //      收益抵不过卡片变长的代价。
-        //    要调的人改配置文件（core 的 data/config.toml 四项各有注释）。
-        "input.association.history",
         "input.association.bigram",
+        "input.association.hint",
+        "input.association.history",
         "input.association.prefix",
         "input.association.punct",
-        // ⑲ 拼音语法模型（core 侧 octagram 接入新增）：**实验性且模型文件不随安装包分发**。
-        //    weight = 0.0 与 model = "" 两个默认都是关，且必须两个都显式配置才生效；
-        //    模型因许可与体积（数百 MB）要用户自行获取。⇒ 在设置页放这两项，绝大多数用户
-        //    拧了完全没反应——没有模型文件时调 weight 是空转，而 model 是个要填文件名的
-        //    输入框，填什么只能去看设计文档。与 ⑧、⑱ 同一判据。
-        //    真正暴露的前提是 core 先决定模型怎么分发（见 core 的
-        //    docs/design/pinyin-grammar-model.md）；那时该配的多半也不是这两个裸键，
-        //    而是「下载/选择模型」那样的功能入口。
-        //
-        //    注：这两个键是 core 早先引入却未同步本仓的遗留项，此前因旧快照里没有它们而
-        //    一直没报红，是本次重生成把它们激活的——不是本次 core 改动带来的。
-        "schema.pinyin.grammar.weight",
-        "schema.pinyin.grammar.model",
-        // ⑳ core 的 `[mobile.*]` 域：**移动端对桌面基线的覆盖**，桌面构建根本不读。
-        //    本程序只在桌面端运行 ⇒ 这些键在这里既显示不出有意义的当前值，改了也不会
-        //    影响本机任何行为。它们的编辑入口属于移动端设置页（安卓仓的 Compose 界面）。
-        //
-        //    ⚠️ core 将来往 [mobile.*] 加键时，这道测试会再报一次——**照样登记进这里，
-        //    别接进清单**。判据不是「这个键有没有用」而是「它管的是不是本平台」。
+        "input.auto_pair.state_ttl_secs",
+        "input.buffer.close_after_send",
+        "input.buffer.hold_ms",
+        "input.buffer.pace",
+        "input.caret.add_word_via_composition",
+        "input.caret.rare_char_via_composition",
+        "input.caret.special_via_composition",
+        "input.caret.temp_pinyin_via_composition",
+        "input.cmdbar.enabled",
+        "input.commit_newline",
+        "input.emoji.tables",
+        "input.password_force_english",
+        "input.phrase.min_prefix",
+        "input.temp_english.enabled",
+        "input.temp_pinyin.enabled",
+        "input.temp_pinyin.hotkey",
+        "input.top_commit_learn",
+        "input.top_commit_mode",
+        "keys.buffer_send",
+        "keys.clipboard_panel",
+        "keys.global_hotkeys",
+        "keys.toggle_buffer",
         "mobile.association.kind",
         "mobile.association.mode",
         "mobile.association.punct",
-        // ㉑ 联想的编码栏标识：纯文案定制项，出厂「联想输入」已够用。
-        //    它只在「编码不嵌入宿主程序」时可见——而嵌入是出厂默认，多数用户根本看不到
-        //    这个标识，却要在卡片里常占一行。要改的人手写 config.toml。
-        //    ⚠️ 与 ⑱ 那四个来源开关不同，这一项**不是**「改了没反应」——它有实际作用，
-        //    只是作用面窄。将来若卡片有余地，可以放回清单（type = "string"）。
-        "input.association.hint",
-        // ㉒' 工具栏自定义按钮（core 0.119）：**已有 GUI**，但没有属于自己的清单项。
-        //
-        //    它由 `ui.toolbar.items` 那一项（外观 → 工具栏 → 显示内容）**一并读写**：
-        //    同一个对话框里既排顺序、开关显隐，也新建/编辑/删除按钮。两个键是同一个
-        //    功能的两半（定义 + 引用），拆成两个清单项会让用户在两处来回跳，
-        //    且「删了按钮但引用还在」这类不一致会变成用户要自己收拾的事。
-        //
-        //    故它在本名单里，理由是「没有独立清单项」而非「不该有 GUI」。
-        //    ⚠️ 若日后给它单独立项，记得从本名单撤出（双向断言会提醒）。
-        //
-        //    2026-08-26 之前这里写的是「设计上不做专属控件」——用户要求做，已推翻。
-        "ui.toolbar.buttons",
-        // ㉕ 任务栏图标主字颜色的另外三格：**已有 GUI**，但没有属于自己的清单项。
-        //    四格（中/英 × 浅/深任务栏）由 `ui.langbar.text_color_cn_light` 那一项
-        //    （外观 → 任务栏图标 → 主字颜色）的 2×2 对话框一并读写，理由同 ㉒'：
-        //    同一件事拆成四行就是用户要求消掉的「大量同类控件」。
-        //    ⚠️ 若日后给其中某格单独立项，记得从本名单撤出（双向断言会提醒）。
+        "moodflow.app_allowlist",
+        "moodflow.app_blocklist",
+        "moodflow.enabled",
+        "moodflow.hub_autostart",
+        "moodflow.pause_hotkey",
+        "moodflow.remember_pause",
+        "moodflow.rewrite_clipboard",
+        "moodflow.rewrite_hotkey",
+        "moodflow.rewrite_insert_apps",
+        "moodflow.rewrite_style",
+        "plugins.enabled",
+        "plugins.safe_mode",
+        "schema.active",
+        "schema.available",
+        "schema.codetable.auto_phrase.draft_flush_batch",
+        "schema.codetable.auto_phrase.draft_max_entries",
+        "schema.codetable.auto_phrase.draft_ttl_hours",
+        "schema.codetable.auto_phrase.idle_timeout_ms",
+        "schema.codetable.auto_phrase.temp_max_entries",
+        "schema.codetable.input_chars",
+        "schema.codetable.leading_chars",
+        "schema.pinyin.frequency.base_scale",
+        "schema.pinyin.frequency.recency_peak",
+        "schema.pinyin.grammar.model",
+        "schema.pinyin.grammar.weight",
+        "stats.speed_factor",
+        "ui.candidate.custom_x",
+        "ui.candidate.custom_y",
+        "ui.candidate.fast_first_show_fallback_ms",
+        "ui.candidate.fast_typing_window_ms",
+        "ui.candidate.first_show_settle_ratio",
+        "ui.candidate.matrix",
+        "ui.font.path",
+        "ui.font.render_mode",
         "ui.langbar.text_color_cn_dark",
-        "ui.langbar.text_color_en_light",
         "ui.langbar.text_color_en_dark",
-        // 注：㉔ 区块名列表两项（`input.rare_char.include_blocks` /
-        // `schema.frequency.exclude_blocks`）曾登记在此，注明「待接入，缺区块多选控件」。
-        // 2026-09-01 已接进清单（输入页的「生僻字」与「词频」两块），故从名单撤出。
-        // 当时记下的那条约束仍然成立、并已写进控件文档：区块表 50 项而界面只列几个粗组，
-        // 故写回必须只增删自己列出的项（`dialog_button_open_pairs`），
-        // 用 `checkbox_group` 会把用户手写的区块名静默抹掉。
-        // 注：㉓ 辅助码那两个键（`schema.pinyin.aux_code.*`）曾登记在此，注明「待做 GUI，
-        // 不是永久豁免」。2026-08-22 已接进清单（候选行为 → 辅助码），故从名单撤出——
-        // 本名单的双向断言不容许留下已被覆盖的条目。
+        "ui.langbar.text_color_en_light",
+        "ui.status.custom_x",
+        "ui.status.custom_y",
+        "ui.toolbar.buttons",
     ];
 
     /// 守护（no-silent-caps）：未被设置清单覆盖的 capability key 必须与豁免名单**逐项相等**。
@@ -640,7 +507,7 @@ mod tests {
     /// 失败时请**重新生成**快照而不是手改 JSON——手改正是漂移的来源。
     #[test]
     fn snapshot_matches_core_generated_capabilities() {
-        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../WindInput/data");
+        let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../Moodflow/data");
         let fresh =
             wind_rpc::capabilities::generate(Some(&data)).expect("生成 core capability 失败");
         let embedded: Value =
@@ -694,7 +561,7 @@ mod tests {
     #[ignore = "写文件的维护工具，按需显式运行"]
     fn regenerate_capabilities_snapshot() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        let fresh = wind_rpc::capabilities::generate(Some(&root.join("../WindInput/data")))
+        let fresh = wind_rpc::capabilities::generate(Some(&root.join("../Moodflow/data")))
             .expect("生成 core capability 失败");
         let path = root.join("src/assets/capabilities.snapshot.json");
         let mut text = serde_json::to_string_pretty(&fresh).expect("序列化失败");

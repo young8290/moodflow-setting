@@ -2,10 +2,10 @@
 //! 以及**便携部署**探测（[`is_portable`]）。两者正交：便携包也分 dev/release。
 //!
 //! 检测优先级（从高到低）：
-//!   1. 环境变量 `WIND_VARIANT=dev`（开发覆盖，与 core `wind-config::variant` 一致）
+//!   1. 环境变量 `MOODFLOW_VARIANT=dev`（开发覆盖，与 core `wind-config::variant` 一致）
 //!   2. 命令行参数 `--mode dev`
 //!   3. 自身 exe 文件名以 `_dev` 结尾（部署为 `wind_setting_dev.exe`）
-//!   4. 程序目录下存在 `wind_input_dev.exe`（与 dev 版 core 同目录部署/开发时）
+//!   4. 程序目录下存在 `moodflow_core_dev.exe`（与 dev 版 core 同目录部署/开发时）
 //!   5. 默认 Release
 
 use std::path::{Path, PathBuf};
@@ -38,14 +38,14 @@ pub fn pipe_suffix() -> &'static str {
     }
 }
 
-/// 应用数据目录名：Release `WindInput`、Dev `WindInputDev`。
+/// 应用数据目录名：Release `Moodflow`、Dev `MoodflowDev`。
 ///
 /// 与 core `variant::app_dir_name()` 同值 —— 两边靠它拼出同一个 `%APPDATA%` 子目录。
 /// **便携部署下这个名字不参与路径**（见 [`portable_userdata_dir`]）。
 pub fn app_dir_name_of(mode: AppMode) -> &'static str {
     match mode {
-        AppMode::Release => "WindInput",
-        AppMode::Dev => "WindInputDev",
+        AppMode::Release => "Moodflow",
+        AppMode::Dev => "MoodflowDev",
     }
 }
 
@@ -92,7 +92,7 @@ pub fn is_portable() -> bool {
 ///
 /// 注意此处**不追加** [`app_dir_name_of`] —— core 的 `portable_userdata_dir()` 也不追加。
 /// 便携包里 dev 与 release 的隔离靠「两个包放在不同文件夹」实现，不靠子目录名；
-/// 这边一旦自作主张多拼一层 `WindInput`，设置程序就会去读 `userdata\WindInput\`，
+/// 这边一旦自作主张多拼一层 `Moodflow`，设置程序就会去读 `userdata\Moodflow\`，
 /// 而输入法读的是 `userdata\`。
 pub fn portable_userdata_dir() -> Option<PathBuf> {
     std::env::current_exe()
@@ -132,8 +132,8 @@ fn version_suffix_of(mode: AppMode, portable: bool) -> &'static str {
 }
 
 fn detect(args: &[String]) -> AppMode {
-    // 1. 环境变量 WIND_VARIANT（与 core 一致）：=dev 强制 dev，其它值强制 release。
-    if let Ok(v) = std::env::var("WIND_VARIANT") {
+    // 1. 环境变量 MOODFLOW_VARIANT（与 core 一致）：=dev 强制 dev，其它值强制 release。
+    if let Ok(v) = std::env::var("MOODFLOW_VARIANT") {
         return if v.eq_ignore_ascii_case("dev") {
             AppMode::Dev
         } else {
@@ -148,7 +148,7 @@ fn detect(args: &[String]) -> AppMode {
         return AppMode::Dev;
     }
 
-    // 3/4. 自身 exe 文件名 _dev 后缀，或同目录存在 wind_input_dev.exe。
+    // 3/4. 自身 exe 文件名 _dev 后缀，或同目录存在 moodflow_core_dev.exe。
     if let Ok(exe) = std::env::current_exe() {
         let self_is_dev = exe
             .file_stem()
@@ -158,7 +158,7 @@ fn detect(args: &[String]) -> AppMode {
             return AppMode::Dev;
         }
         if let Some(dir) = exe.parent()
-            && dir.join("wind_input_dev.exe").exists()
+            && dir.join("moodflow_core_dev.exe").exists()
         {
             return AppMode::Dev;
         }
@@ -232,16 +232,19 @@ mod tests {
     fn portable_userdata_dir_has_no_variant_subdir() {
         let dir = portable_userdata_dir().expect("测试进程必能定位自身 exe");
         assert!(dir.ends_with("userdata"), "{}", dir.display());
-        assert!(
-            !dir.to_string_lossy().contains("WindInput"),
-            "便携路径不该出现变体目录名：{}",
-            dir.display()
+        assert_eq!(
+            dir,
+            std::env::current_exe()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .join("userdata")
         );
     }
 
     #[test]
     fn app_dir_name_matches_core() {
-        assert_eq!(app_dir_name_of(AppMode::Release), "WindInput");
-        assert_eq!(app_dir_name_of(AppMode::Dev), "WindInputDev");
+        assert_eq!(app_dir_name_of(AppMode::Release), "Moodflow");
+        assert_eq!(app_dir_name_of(AppMode::Dev), "MoodflowDev");
     }
 }

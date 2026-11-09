@@ -1,4 +1,13 @@
 {
+ "chord": {
+  "enabled": false,
+  "keymap": "chord_keymap.json"
+ },
+ "clipboard": {
+  "enabled": false,
+  "max_entries": 200,
+  "retention_days": 30
+ },
  "debug": {
   "log_level": "info",
   "log_max_files": 10,
@@ -21,7 +30,6 @@
    "mode": "one_shot",
    "prefix": true,
    "punct": false,
-   "select_keys_commit": true,
    "space_commits": true
   },
   "auto_pair": {
@@ -45,10 +53,14 @@
    ],
    "state_ttl_secs": 120
   },
+  "buffer": {
+   "close_after_send": false,
+   "hold_ms": 1200,
+   "pace": "off"
+  },
   "buffer_symbol_chars": "-",
   "capslock": {
-   "cancel_on_mode_switch": false,
-   "mode_after_cancel": "chinese"
+   "cancel_on_mode_switch": false
   },
   "caret": {
    "add_word_via_composition": false,
@@ -99,24 +111,26 @@
    ]
   },
   "emoji": {
-   "categories": false,
    "enabled": false,
-   "max_hosts": 1,
-   "max_per_word": 3,
-   "min_word_chars": 2,
-   "modules": {
-    "frost_chem": false,
-    "frost_diezi": false,
-    "frost_emoji": true,
-    "frost_greek": false,
-    "frost_keys": false,
-    "frost_misc": false,
-    "frost_month": false,
-    "frost_radicals": false,
-    "frost_sitcom": false
-   },
    "scope": "exact",
-   "show_as": "after"
+   "show_as": "after",
+   "tables": [
+    {
+     "enabled": true,
+     "id": "symbols",
+     "path": "system.symbols.toml"
+    },
+    {
+     "enabled": true,
+     "id": "word",
+     "path": "emoji/emoji_word.txt"
+    },
+    {
+     "enabled": false,
+     "id": "category",
+     "path": "emoji/emoji_category.txt"
+    }
+   ]
   },
   "english_case_cycle_key": "",
   "enter_behavior": "commit",
@@ -175,7 +189,6 @@
    "phrase_seg": false,
    "raw_candidate": "always",
    "shift_behavior": "temp_english",
-   "shift_when_composing": "buffer",
    "show_candidates": true,
    "space_as_input": false,
    "symbol_chars": "0123456789+-_.@#/",
@@ -216,8 +229,9 @@
  "keys": {
   "activate_ime": "ctrl+shift+[",
   "add_word": "ctrl+equal",
+  "buffer_send": "ctrl+shift+enter",
+  "clipboard_panel": "ctrl+shift+h",
   "commit_on_switch": true,
-  "ctrl_space_toggle": true,
   "delete_candidate": "ctrl+shift+number",
   "global_hotkeys": [],
   "highlight_keys": [
@@ -246,6 +260,7 @@
   "softkeyboard": "ctrl+shift+k",
   "switch_engine": "ctrl+shift+e",
   "take_screenshot": "ctrl+shift+f11",
+  "toggle_buffer": "alt+shift+b",
   "toggle_full_width": "shift+space",
   "toggle_mode_keys": [
    "lshift",
@@ -262,6 +277,29 @@
    "mode": "continuous",
    "punct": true
   }
+ },
+ "moodflow": {
+  "app_allowlist": [],
+  "app_blocklist": [
+   "*bank*",
+   "*pay*",
+   "KeePass*.exe",
+   "1Password*.exe",
+   "Bitwarden*.exe",
+   "mstsc.exe"
+  ],
+  "enabled": true,
+  "hub_autostart": true,
+  "pause_hotkey": "ctrl+alt+p",
+  "remember_pause": false,
+  "rewrite_clipboard": true,
+  "rewrite_hotkey": "ctrl+alt+r",
+  "rewrite_insert_apps": [],
+  "rewrite_style": "gentle"
+ },
+ "plugins": {
+  "enabled": [],
+  "safe_mode": false
  },
  "schema": {
   "active": "wubi86",
@@ -297,7 +335,6 @@
     "protect_top_n_len1": 1,
     "protect_top_n_len2": 1,
     "protect_top_n_len3": 0,
-    "record_always": false,
     "strategy": "top"
    },
    "input_chars": "",
@@ -316,11 +353,6 @@
    "z_key_repeat": true
   },
   "english": {
-   "auto_learn": {
-    "enabled": false,
-    "promote_count": 3,
-    "temp_max_entries": 5000
-   },
    "case_follow_input": true,
    "case_variants": false,
    "commit_space": false,
@@ -329,7 +361,6 @@
     "enabled": false,
     "half_life": 0.0,
     "promote_prefix": "all",
-    "record_always": false,
     "strategy": "position"
    },
    "phrase_seg": false,
@@ -338,7 +369,6 @@
   "frequency": {
    "exclude_blocks": []
   },
-  "keep_all_loaded": false,
   "mix": {
    "auto_commit_block_on_english": false,
    "auto_commit_block_on_pinyin": true,
@@ -347,7 +377,6 @@
    "enable_pinyin_abbrev": false,
    "min_english_length": 3,
    "min_pinyin_length": 2,
-   "pinyin_code_hint": true,
    "pinyin_only_overflow": true,
    "pinyin_partial_candidates": false,
    "pinyin_partial_candidates_overflow": true,
@@ -377,9 +406,6 @@
    }
   ],
   "pinyin": {
-   "abbrev": {
-    "enabled": true
-   },
    "auto_learn": {
     "enabled": true,
     "max_word_length": 10,
@@ -405,8 +431,7 @@
     "enabled": true,
     "half_life": 0.0,
     "promote_prefix": "single",
-    "recency_peak": 0.0,
-    "record_always": false
+    "recency_peak": 0.0
    },
    "fuzzy": {
     "an_ang": false,
@@ -442,8 +467,7 @@
   "primary_codetable": "",
   "primary_pinyin": "",
   "quick_input": {
-   "decimal_places": 6,
-   "history_max": 1000
+   "decimal_places": 6
   }
  },
  "stats": {
@@ -459,7 +483,6 @@
   "candidate": {
    "auto_comment_dicts": true,
    "comment_above": false,
-   "comment_enabled": true,
    "comment_max_chars_horizontal": 0,
    "comment_max_chars_vertical": 0,
    "comment_template_horizontal": "${code_hint|code_rev|shuangpin}",
@@ -476,6 +499,7 @@
    "hide_window": false,
    "index_labels": [],
    "layout": "horizontal",
+   "matrix": false,
    "max_chars": 16,
    "min_rows": 0,
    "min_window_height_horizontal": 0,
@@ -584,6 +608,7 @@
     "-s2t",
     "-t2s",
     "soft_keyboard",
+    "moodflow",
     "settings"
    ],
    "vertical": false,
@@ -591,7 +616,6 @@
   },
   "tooltip": {
    "delay": 200,
-   "enabled": true,
    "max_chars": 200,
    "sections": [
     {
@@ -625,14 +649,6 @@
      "label": "拆字",
      "promote": "",
      "template": "${char}：${chaizi}{ [${chaizi_code}]}"
-    },
-    {
-     "each": "",
-     "enabled": true,
-     "inline": false,
-     "label": "释义",
-     "promote": "",
-     "template": "${dict_all:\n}"
     },
     {
      "each": "char",

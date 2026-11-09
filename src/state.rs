@@ -390,7 +390,7 @@ pub enum ConnState {
     Loading,
     /// 输入法服务在跑，配置可读可存。
     Ready,
-    /// `WIND_RPC_MOCK=1` 的离线预览，数据是假的、改动存不下去。
+    /// `MOODFLOW_RPC_MOCK=1` 的离线预览，数据是假的、改动存不下去。
     Mock,
     /// 正式模式下服务没起来（同时会弹阻断对话框）。
     Down,
@@ -482,7 +482,7 @@ pub struct AppState {
     pub theme_import_dialog_visible: Signal<bool>,
     /// 「导入主题」对话框（用户**主动**发起的那个）是否可见。
     ///
-    /// 与 [`Self::theme_import_dialog_visible`] 是两回事：那个由 `windinput://import/theme`
+    /// 与 [`Self::theme_import_dialog_visible`] 是两回事：那个由 `moodflow://import/theme`
     /// 从浏览器唤起，问的是「这个来源可信吗」；这个是用户自己点开的，问的是「你要从哪导」。
     pub theme_picker_visible: Signal<bool>,
     /// 「导入主题」对话框里的链接输入。
@@ -740,7 +740,7 @@ fn mode_str_to_idx(mode: &str) -> usize {
 /// 是「别的设置能存、只有方案页存不了」**，很容易误判成方案页自己的问题。
 ///
 /// 守卫见 `builtin_registrations_survive_registry_reset`。
-
+///
 /// 登记 `[system]` 域的落地动作。
 ///
 /// # 必须可重入，且必须在每次 `FieldRegistry::reset()` 之后重新调用
@@ -1108,7 +1108,7 @@ impl AppState {
         }
     }
 
-    // ── windinput:// 协议关联 ─────────────────────────────────────────────
+    // ── moodflow:// 协议关联 ─────────────────────────────────────────────
 
     /// 注册（或修复）协议关联，指向本程序。
     ///
@@ -1119,7 +1119,7 @@ impl AppState {
             Ok(()) => {
                 self.set_protocol_self_heal(true);
                 self.integration.refresh();
-                self.notify_ok("windinput:// 协议已注册");
+                self.notify_ok("moodflow:// 协议已注册");
             }
             Err(e) => self.notify_err(format!("协议注册失败：{e}")),
         }
@@ -1134,7 +1134,7 @@ impl AppState {
             Ok(()) => {
                 self.set_protocol_self_heal(false);
                 self.integration.refresh();
-                self.notify_ok("windinput:// 协议注册已解除，启动时不再自动注册");
+                self.notify_ok("moodflow:// 协议注册已解除，启动时不再自动注册");
             }
             Err(e) => self.notify_err(format!("解除协议注册失败：{e}")),
         }
@@ -3602,7 +3602,7 @@ mod trigger_conflict_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.current_config = Config::from_value(json!({
             "input": {
@@ -3918,7 +3918,7 @@ mod tests {
         }
     }
 
-    /// 所有涉及 WIND_RPC_MOCK 环境变量的测试必须持有此锁，防止并行 race。
+    /// 所有涉及 MOODFLOW_RPC_MOCK 环境变量的测试必须持有此锁，防止并行 race。
     /// 锁定义在 `rpc` 模块并全 crate 共用 —— 本模块曾自建一把，与 `theme_import`
     /// 的另一把互不相识，造成间歇性失败（见 rpc.rs 的说明）。
     use crate::rpc::ENV_LOCK;
@@ -3986,7 +3986,7 @@ mod tests {
     #[test]
     fn save_refreshes_override_summary_when_side_committer_ran() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.data_loaded = true;
         let (side, _n) = probe(true, Ok(()));
@@ -3995,7 +3995,7 @@ mod tests {
 
         assert!(st.save(), "side 提交成功应保存成功");
         let calls = crate::rpc::take_mock_calls();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(
             calls.iter().any(|(m, _)| m == "schema.overrideSummary"),
             "保存了 side 改动却没有重拉 overrideSummary，实际调用: {calls:?}"
@@ -4011,7 +4011,7 @@ mod tests {
     #[test]
     fn save_does_not_refresh_override_summary_without_side_changes() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.data_loaded = true;
         let mut settled = st.current_config.clone();
@@ -4025,7 +4025,7 @@ mod tests {
 
         assert!(st.save(), "无 side 改动也应正常保存成功");
         let calls = crate::rpc::take_mock_calls();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(
             calls.iter().any(|(m, _)| m == "config.setItems"),
             "前提：这次保存确实写了 config.toml（无关键），实际调用: {calls:?}"
@@ -4042,7 +4042,7 @@ mod tests {
     #[test]
     fn save_refreshes_override_summary_when_schema_available_changed() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.data_loaded = true;
         // 基线 = writer 跑过之后的配置（否则别的键也会进 diff），再把启用表改成「只有
@@ -4057,7 +4057,7 @@ mod tests {
 
         assert!(st.save(), "改启用表应保存成功");
         let calls = crate::rpc::take_mock_calls();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(
             calls.iter().any(|(m, p)| m == "config.setItems"
                 && p["items"]
@@ -4132,7 +4132,7 @@ mod tests {
     #[test]
     fn load_override_summary_returns_empty_map_when_core_unreachable() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         let got = load_override_summary();
         assert!(got.is_empty(), "core 连不上时应退回空表：{got:?}");
     }
@@ -4316,7 +4316,7 @@ mod tests {
         crate::dota2_compat::SystemAlias {
             description: desc.map(str::to_string),
             recorded: rec.map(str::to_string),
-            real: "清风输入法".to_string(),
+            real: "Moodflow 输入法".to_string(),
         }
     }
 
@@ -4334,7 +4334,7 @@ mod tests {
             "system": { "dota2_compat": true, "dota2_compat_name": "甲" }
         }));
 
-        reg.seed_system_baseline(&cfg, &caps, Some(&sys(Some("清风输入法"), None)));
+        reg.seed_system_baseline(&cfg, &caps, Some(&sys(Some("Moodflow 输入法"), None)));
         assert_eq!(
             reg.system_baseline_bool(DOTA2_KEY),
             Some(false),
@@ -4383,7 +4383,7 @@ mod tests {
         reg.seed_system_baseline(
             &cfg,
             &Capabilities::default(),
-            Some(&sys(Some("清风输入法"), None)),
+            Some(&sys(Some("Moodflow 输入法"), None)),
         );
         assert_eq!(
             reg.system_baseline_str(DOTA2_NAME_KEY).as_deref(),
@@ -4543,7 +4543,7 @@ mod tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let st = AppState::empty();
         let outcome = AppState::try_import_theme(
@@ -4553,7 +4553,7 @@ mod tests {
             st.theme_overwrite_visible,
         );
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(outcome.is_none(), "撞名既没成也没败，要等用户拍板");
         assert!(st.theme_overwrite_visible.get(), "该弹覆盖确认");
         assert!(
@@ -4572,7 +4572,7 @@ mod tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let st = AppState::empty();
         let outcome = AppState::try_import_theme(
@@ -4582,7 +4582,7 @@ mod tests {
             st.theme_overwrite_visible,
         );
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(!st.theme_overwrite_visible.get(), "没撞名不该弹框");
         assert_eq!(st.theme_overwrite_source.get(), None, "也不该留暂存");
         assert_eq!(
@@ -4627,7 +4627,7 @@ mod tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let mut st = AppState::empty();
         // 哨兵：mock 对 force=false 回冲突、force=true 回成功。暂存的这份仍带哨兵，
@@ -4643,7 +4643,7 @@ mod tests {
         );
         st.confirm_overwrite_theme();
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(!st.theme_overwrite_visible.get(), "确认后应收起对话框");
         assert_eq!(
             st.theme_overwrite_source.get(),
@@ -4739,7 +4739,7 @@ mod tests {
     #[test]
     fn external_config_change_notifies_only_on_a_real_change() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         // 清单里真实存在的一项，并给它登记一个加载器（正常由 UI 构建时注册）。
         let key = "input.filter_mode";
@@ -4975,7 +4975,7 @@ mod tests {
     #[test]
     fn refresh_theme_names_keeps_the_selection_on_the_same_theme() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
 
         // 重扫前：列表里只有两项，选中末项 mono。
@@ -4990,7 +4990,7 @@ mod tests {
             .insert("ui.theme.name".to_string(), idx);
 
         st.refresh_theme_names();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
 
         // 前置条件：重扫确实把 mono 挪了位，否则这条用例测不到任何东西。
         assert_eq!(st.theme_value_sig.get(), vec!["default", "jade", "mono"]);
@@ -5005,7 +5005,7 @@ mod tests {
     #[test]
     fn refresh_theme_names_updates_options_from_core() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
 
         st.theme_entries = vec![ThemeEntry {
@@ -5053,7 +5053,7 @@ mod tests {
             "删除后按 mock 重新拉取列表"
         );
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 配置里的主题已经不在列表里（外部主题被删 / 这一轮没扫到）时，它必须仍留在下拉里
@@ -5063,7 +5063,7 @@ mod tests {
     #[test]
     fn refresh_theme_names_keeps_a_theme_that_is_gone_from_the_list() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.current_config
             .set_path("ui.theme.name", Value::String("gone".to_string()));
@@ -5094,7 +5094,7 @@ mod tests {
         st.refresh_theme_names();
         assert_eq!(st.theme_value_sig.get(), vec!["default", "jade", "mono"]);
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 覆盖导入 / 删除当前主题都经 `refresh_theme_names` 刷新列表，但跟随值
@@ -5107,7 +5107,7 @@ mod tests {
     #[test]
     fn refresh_theme_names_also_refreshes_theme_follow() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.theme_follow.set(Some(crate::theme_follow::ThemeFollow {
             font_size: 99,
@@ -5122,7 +5122,7 @@ mod tests {
         st.refresh_theme_names();
 
         let calls = crate::rpc::take_mock_calls();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(
             calls.iter().any(|(m, _)| m == "theme.resolved"),
             "刷新主题列表却没有重拉 theme.resolved，实际调用: {calls:?}"
@@ -5139,7 +5139,7 @@ mod tests {
     fn accent_follow_fetches_once_per_theme_and_applies() {
         use crate::accent::{AccentMode, derive};
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         let th = ThemeHandle::detached(Theme::default());
         *st.theme_handle.borrow_mut() = Some(th.clone());
@@ -5153,7 +5153,7 @@ mod tests {
         st.sync_accent();
 
         let calls = crate::rpc::take_mock_calls();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         let fetches: Vec<_> = calls.iter().filter(|(m, _)| m == "theme.accent").collect();
         assert_eq!(fetches.len(), 1, "同一主题不该重复取色: {calls:?}");
         assert_eq!(fetches[0].1["name"], "jade");
@@ -5179,14 +5179,14 @@ mod tests {
     #[test]
     fn accent_default_mode_never_calls_core() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let st = AppState::empty();
         st.accent_idx
             .set(crate::accent::AccentMode::Default.index());
         crate::rpc::take_mock_calls();
         st.sync_accent();
         let calls = crate::rpc::take_mock_calls();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(!calls.iter().any(|(m, _)| m == "theme.accent"), "{calls:?}");
     }
 
@@ -5194,7 +5194,7 @@ mod tests {
     #[test]
     fn accent_follow_neutral_theme_falls_back_with_note() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         let th = ThemeHandle::detached(Theme::default());
         *st.theme_handle.borrow_mut() = Some(th.clone());
@@ -5203,7 +5203,7 @@ mod tests {
             .set_path("ui.theme.name", Value::String("mono".into()));
         st.accent_idx.set(crate::accent::AccentMode::Ime.index());
         st.sync_accent();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert_eq!(
             th.current().palette.accent,
             crate::theme_def::theme_for(true).palette.accent
@@ -5219,7 +5219,7 @@ mod tests {
     #[test]
     fn invalidate_accent_forces_refetch() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let st = AppState::empty();
         st.accent_idx.set(crate::accent::AccentMode::Ime.index());
         st.sync_accent();
@@ -5228,7 +5228,7 @@ mod tests {
         st.invalidate_accent();
         st.sync_accent();
         let calls = crate::rpc::take_mock_calls();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         let n = calls.iter().filter(|(m, _)| m == "theme.accent").count();
         assert_eq!(n, 1, "{calls:?}");
     }
@@ -5246,7 +5246,7 @@ mod tests {
     #[test]
     fn untouched_settings_produce_no_diff() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.apply_loaded(LoadedState::fetch());
         // 建出每一项 = 注册它的 writer。顺序按 manifest 声明序，与真实渲染一致。
@@ -5256,7 +5256,7 @@ mod tests {
         }
         let items = st.debug_diff_after_writers();
         let names: Vec<&str> = items.iter().map(|i| i.key.as_str()).collect();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(
             items.is_empty(),
             "什么都没动却产生了 diff（这些键的 writer 写出了与 base 不同的值）：{names:?}"
@@ -5271,7 +5271,7 @@ mod tests {
     #[test]
     fn untouched_comment_dicts_in_core_shape_produce_no_diff() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let spec = |id: &str, label: &str, path: &str, enabled: bool, auto: bool| {
             serde_json::json!({
                 "id": id, "label": label, "path": path,
@@ -5293,7 +5293,7 @@ mod tests {
             let _ = crate::manifest::field(&st, k);
         }
         let items = st.debug_diff_after_writers();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(
             items.is_empty(),
             "什么都没动却产生了 diff：{:?}",
@@ -5311,7 +5311,7 @@ mod tests {
         // 词库窗 / 兼容窗当主窗时没有设置外壳、也就没有 accent_watcher：数据到达本身就要把
         // 跟随色取回来换上，哪怕启动预取那次没取到（输入法晚于设置程序起来）。
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         let th = ThemeHandle::detached(Theme::default());
         *st.theme_handle.borrow_mut() = Some(th.clone());
@@ -5320,7 +5320,7 @@ mod tests {
         crate::rpc::take_mock_calls();
         st.apply_loaded(LoadedState::fetch());
         let calls = crate::rpc::take_mock_calls();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(calls.iter().any(|(m, _)| m == "theme.accent"), "{calls:?}");
         // mock 当前主题 default 的亮档 accentText #2563EB 本就达标，原样换上。
         assert_eq!(th.current().palette.accent, Color::hex(0x2563EB));
@@ -5330,10 +5330,10 @@ mod tests {
     #[test]
     fn apply_loaded_sets_theme_follow_and_drops_default_font_entry() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         st.apply_loaded(LoadedState::fetch());
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert_eq!(st.theme_follow.get().map(|t| t.font_size), Some(18));
         let fonts = st.font_sig.get();
         assert!(!fonts.is_empty(), "mock 有字体列表");
@@ -5364,20 +5364,20 @@ mod tests {
     fn loaded_state_uses_embedded_manifest_in_mock() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         // 启用 mock，fetch 不依赖真实 core
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let data = LoadedState::fetch();
         assert!(data.connected, "mock 下应视为已连接");
         // capabilities 从 mock 的 system.capabilities 返回，非空
         let caps = Capabilities::from_value(&data.capabilities_value);
         assert!(caps.entries.len() >= 114, "mock capabilities 应含全部 key");
         // 测试结束前恢复现场
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     #[test]
     fn non_mock_disconnect_sets_conn_failed() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         let mut st = AppState::empty();
         let data = LoadedState {
             config_value: Value::Object(Default::default()),
@@ -5402,7 +5402,7 @@ mod tests {
     #[test]
     fn pending_dict_target_applied_after_schemas_arrive() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
 
         // 冷启动：此刻方案列表为空，深链必须挂起而非当场失败
@@ -5441,7 +5441,7 @@ mod tests {
         );
         // 完全命中不该弹提示（提示只留给降级场景）
         assert!(st.feedback.get().is_none(), "命中时不应有多余 toast");
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 未降级、或根本拿不到回包时**不出横幅**。
@@ -5501,7 +5501,7 @@ mod tests {
             "sections": ["ui.font"],
             "unparsable": [{
                 "layer": "user",
-                "path": "C:\\Users\\me\\AppData\\Roaming\\WindInput\\config.toml",
+                "path": "C:\\Users\\me\\AppData\\Roaming\\Moodflow\\config.toml",
                 "error": "duplicate key `per_page`",
                 "skippedLines": [6, 12],
                 "salvagedKeys": 3,
@@ -5562,7 +5562,7 @@ mod tests {
     #[test]
     fn mock_disconnect_does_not_block() {
         let _g = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         let data = LoadedState {
             config_value: Value::Object(Default::default()),
@@ -5578,7 +5578,7 @@ mod tests {
         };
         st.apply_loaded(data);
         assert!(!st.conn_failed.get(), "mock 模式不应阻断");
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 设置页与 core 挑本地化字体名的规则必须一致（见 [`super::pick_font_display_name`]）。

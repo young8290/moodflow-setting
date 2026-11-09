@@ -52,7 +52,7 @@ use super::template_assist::{PreviewSource, TemplateField, insert_color_button, 
 pub const EACH: &[(&str, &str)] = &[("", "整个候选"), ("han", "逐汉字"), ("char", "逐字符")];
 
 /// 模板变量说明页（与候选注释那页 `settings/appearance/candidate-comment` 并列）。
-const TOOLTIP_DOC_URL: &str = "https://windinput.com/docs/settings/appearance/candidate-tooltip";
+const TOOLTIP_DOC_URL: &str = "https://github.com/young8290/Moodflow/tree/main/docs";
 
 /// 一个预设段：`(预设名, label, each, promote, template)`。
 ///
@@ -79,7 +79,6 @@ pub const PRESETS: &[(&str, &str, &str, &str, &str)] = &[
         "${char}：{${chaizi}{ [${chaizi_code}]}\t}${readings}",
     ),
     ("Unicode", "Unicode", "char", "", "${char}：${unicode}"),
-    ("释义", "释义", "", "", "${dict_all:\n}"),
     ("词库注释", "词库注释", "", "", "${dict}"),
     ("调试", "调试", "", "", "${debug}"),
 ];
@@ -92,7 +91,6 @@ const PRESET_DESCS: &[&str] = &[
     "每个汉字一行，显示字根与拆字编码",
     "拆字与读音合在一段，每字一行分两列",
     "每个字符一行，显示码位",
-    "所有注释词库里该词的释义，每个词库一行（需先挂载注释词库）",
     "注释词库里该词的注释，只取第一个查到的词库（需先挂载注释词库）",
     "编码来源、权重等调试信息",
 ];

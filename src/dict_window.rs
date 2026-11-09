@@ -33,7 +33,7 @@ use crate::pages::dict::{build_dict_dialogs, view::build_page_for};
 use crate::state::AppState;
 
 /// 窗口标题。`App` 主窗承载词库时（`--page dict` 冷启动）也用这个，两条路同名。
-pub const TITLE: &str = "清风输入法 · 词库管理";
+pub const TITLE: &str = "Moodflow 输入法 · 词库管理";
 
 /// 单例键。同键窗口同时只存在一个：再点一次侧栏不会开出第二个，已开着的那个被激活到
 /// 前台（最小化的会还原）。键随窗口登记表自动释放，`request_close` 这类绕过关闭决策链
@@ -182,7 +182,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let app = Rc::new(RefCell::new(AppState::empty()));
         let mut tree = build_tree(&app);
 
@@ -219,7 +219,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let app = Rc::new(RefCell::new(AppState::empty()));
         let (import, schema_mgr) = {
             let st = app.borrow();

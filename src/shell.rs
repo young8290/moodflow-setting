@@ -590,7 +590,7 @@ pub(crate) fn build_titlebar(subtitle: &str) -> Element {
                         .cross(Align::Center)
                         .spacing(4)
                         .child(
-                            Element::label("清风输入法")
+                            Element::label("Moodflow 输入法")
                                 .font_size(13.0)
                                 .font_weight(600)
                                 .fg_role(Role::Text),
@@ -610,7 +610,7 @@ pub(crate) fn build_titlebar(subtitle: &str) -> Element {
                 .child(
                     Element::label(format!(
                         "{}{}",
-                        env!("WIND_SETTING_VERSION"),
+                        env!("MOODFLOW_SETTING_VERSION"),
                         crate::mode::version_suffix()
                     ))
                     .font_size(11.0)

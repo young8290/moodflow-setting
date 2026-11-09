@@ -202,7 +202,7 @@ mod tests {
 
     use crate::state::{AppState, LoadedState, WizardPhase};
 
-    /// 造一个按 mock 数据加载好的 AppState。调用方须已持 `ENV_LOCK` 并设好 `WIND_RPC_MOCK`。
+    /// 造一个按 mock 数据加载好的 AppState。调用方须已持 `ENV_LOCK` 并设好 `MOODFLOW_RPC_MOCK`。
     pub(super) fn mock_app() -> Rc<RefCell<AppState>> {
         let mut st = AppState::empty();
         st.apply_loaded(LoadedState::fetch());
@@ -213,9 +213,9 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let r = f();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         r
     }
 

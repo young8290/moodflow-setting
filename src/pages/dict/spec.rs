@@ -576,7 +576,7 @@ pub enum WordField {
     CommonBase,
     /// 常用字：所属 Unicode 块的中文名（「注音符号」「表意文字描述符」）。
     ///
-    /// 光看字形分不清这些东西是什么——WindInput issue #83 的用户为此把整张码表喂给 AI
+    /// 光看字形分不清这些东西是什么——Moodflow issue #83 的用户为此把整张码表喂给 AI
     /// 分类、再手工逐个试，才弄明白哪些会显示哪些不会。这一列就是把那份工作内建进来。
     Block,
     /// 常用字：决定它常用性的那个字符类。
@@ -1467,6 +1467,38 @@ pub fn spec_for(cat: WordCategory) -> &'static CategorySpec {
     }
 }
 
+/// 字符类的「范围」摘要文本。
+///
+/// 码位段与离散成员**两支都要报**：emoji 类是纯字表（1427 条、零码位段），只报段会显示
+/// 空白，用户以为这个类什么都不管；常用汉字类反过来。段多于两条时省略后面的，
+/// 完整列表在配置文件里。
+fn charset_scope_text(v: &serde_json::Value) -> String {
+    let ranges: Vec<&str> = v
+        .get("ranges")
+        .and_then(|x| x.as_array())
+        .map(|a| a.iter().filter_map(|x| x.as_str()).collect())
+        .unwrap_or_default();
+    let members = v.get("memberCount").and_then(|x| x.as_u64()).unwrap_or(0);
+
+    let mut parts: Vec<String> = Vec::new();
+    if !ranges.is_empty() {
+        let shown = ranges.iter().take(2).cloned().collect::<Vec<_>>().join(" ");
+        parts.push(if ranges.len() > 2 {
+            format!("{shown} 等 {} 段", ranges.len())
+        } else {
+            shown
+        });
+    }
+    if members > 0 {
+        parts.push(format!("{members} 字"));
+    }
+    if parts.is_empty() {
+        "—".to_string()
+    } else {
+        parts.join(" · ")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2129,37 +2161,5 @@ mod tests {
         // 两个方向的标签都得拼得出来，且互不相同。
         assert_eq!(common_label(false), "生僻");
         assert_eq!(common_label(true), "常用");
-    }
-}
-
-/// 字符类的「范围」摘要文本。
-///
-/// 码位段与离散成员**两支都要报**：emoji 类是纯字表（1427 条、零码位段），只报段会显示
-/// 空白，用户以为这个类什么都不管；常用汉字类反过来。段多于两条时省略后面的，
-/// 完整列表在配置文件里。
-fn charset_scope_text(v: &serde_json::Value) -> String {
-    let ranges: Vec<&str> = v
-        .get("ranges")
-        .and_then(|x| x.as_array())
-        .map(|a| a.iter().filter_map(|x| x.as_str()).collect())
-        .unwrap_or_default();
-    let members = v.get("memberCount").and_then(|x| x.as_u64()).unwrap_or(0);
-
-    let mut parts: Vec<String> = Vec::new();
-    if !ranges.is_empty() {
-        let shown = ranges.iter().take(2).cloned().collect::<Vec<_>>().join(" ");
-        parts.push(if ranges.len() > 2 {
-            format!("{shown} 等 {} 段", ranges.len())
-        } else {
-            shown
-        });
-    }
-    if members > 0 {
-        parts.push(format!("{members} 字"));
-    }
-    if parts.is_empty() {
-        "—".to_string()
-    } else {
-        parts.join(" · ")
     }
 }

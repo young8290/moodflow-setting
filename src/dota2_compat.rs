@@ -56,10 +56,10 @@ impl SystemAlias {
 /// 只读 HKLM，**不需要提权**，所以走 `Command::output()` 而不是 `ShellExecuteW`：
 /// 前者拿得到退出码和 stdout，后者两样都没有。
 ///
-/// ★ `WIND_INPUT_CLI_PIPED=1` 不可省：core 的 CLI 分支默认会
+/// ★ `MOODFLOW_INPUT_CLI_PIPED=1` 不可省：core 的 CLI 分支默认会
 /// `AttachConsole(ATTACH_PARENT_PROCESS)` 把标准句柄改指控制台，我们接的管道就废了。
 /// 那个环境变量正是为「被程序拉起、输出要走管道」这种场景设的（见 core 的
-/// `handle_cmdbar::WIND_CLI_PIPED_ENV`）。设置程序是 GUI 子系统、通常没有父控制台，
+/// `handle_cmdbar::MOODFLOW_CLI_PIPED_ENV`）。设置程序是 GUI 子系统、通常没有父控制台，
 /// AttachConsole 多半会失败而侥幸无事——但那是碰运气，不是判据。
 #[cfg(windows)]
 pub fn probe() -> Option<SystemAlias> {
@@ -69,7 +69,7 @@ pub fn probe() -> Option<SystemAlias> {
 
     let out = std::process::Command::new(core_exe()?)
         .args(["system", "dota2-compat", "status", "--json"])
-        .env("WIND_INPUT_CLI_PIPED", "1")
+        .env("MOODFLOW_INPUT_CLI_PIPED", "1")
         .creation_flags(CREATE_NO_WINDOW)
         .output()
         .ok()?;
@@ -89,7 +89,7 @@ pub fn probe() -> Option<SystemAlias> {
 fn core_exe() -> Option<PathBuf> {
     let dir = std::env::current_exe().ok()?.parent()?.to_path_buf();
     // 变体后缀复用 mode::pipe_suffix()（"" / "_dev"），不另造一份 dev 判定
-    let p = dir.join(format!("wind_input{}.exe", crate::mode::pipe_suffix()));
+    let p = dir.join(format!("moodflow_core{}.exe", crate::mode::pipe_suffix()));
     p.exists().then_some(p)
 }
 

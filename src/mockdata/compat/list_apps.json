@@ -1,7 +1,6 @@
 {
   "rules": [
     {
-      "class": "",
       "effective": {
         "comment": "飞书：在线表格换单元格首键，探测坐标停在上一格",
         "composition_start_pair_guard": true,
@@ -51,12 +50,6 @@
           "userValue": null,
           "value": false
         },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
         "composition_start_pair_guard": {
           "source": "system",
           "systemValue": true,
@@ -94,12 +87,6 @@
           "value": null
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -161,7 +148,6 @@
         }
       },
       "hasUserEntry": false,
-      "key": "feishu.exe\u001f\u001f",
       "overridden": [],
       "process": "Feishu.exe",
       "state": "system",
@@ -171,12 +157,10 @@
         "process": "Feishu.exe",
         "stale_probe_guard": true
       },
-      "title": "",
       "unknownKeys": [],
       "user": null
     },
     {
-      "class": "",
       "effective": {
         "caret_use_top": true,
         "first_show_mode": "instant",
@@ -225,12 +209,6 @@
           "userValue": null,
           "value": true
         },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
         "composition_start_pair_guard": {
           "source": "default",
           "systemValue": null,
@@ -268,12 +246,6 @@
           "value": null
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -335,7 +307,6 @@
         }
       },
       "hasUserEntry": true,
-      "key": "weixin.exe\u001f\u001f",
       "overridden": [
         "first_show_mode",
         "stale_probe_guard"
@@ -347,7 +318,6 @@
         "process": "Weixin.exe",
         "stale_probe_guard": true
       },
-      "title": "",
       "unknownKeys": [],
       "user": {
         "first_show_mode": "instant",
@@ -358,7 +328,6 @@
       }
     },
     {
-      "class": "",
       "effective": {
         "auto_pair": false,
         "first_show_mode": "wait",
@@ -407,12 +376,6 @@
           "userValue": null,
           "value": false
         },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
         "composition_start_pair_guard": {
           "source": "default",
           "systemValue": null,
@@ -450,12 +413,6 @@
           "value": null
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -517,7 +474,6 @@
         }
       },
       "hasUserEntry": true,
-      "key": "excel.exe\u001f\u001f",
       "overridden": [
         "auto_pair"
       ],
@@ -527,7 +483,6 @@
         "first_show_mode": "wait",
         "process": "EXCEL.EXE"
       },
-      "title": "",
       "unknownKeys": [],
       "user": {
         "auto_pair": false,
@@ -535,7 +490,6 @@
       }
     },
     {
-      "class": "",
       "effective": {
         "pin_anchor_when_start_drifts": true,
         "process": "wps.exe"
@@ -583,12 +537,6 @@
           "userValue": null,
           "value": false
         },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
         "composition_start_pair_guard": {
           "source": "default",
           "systemValue": null,
@@ -626,12 +574,6 @@
           "value": null
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -693,7 +635,6 @@
         }
       },
       "hasUserEntry": false,
-      "key": "wps.exe\u001f\u001f",
       "overridden": [],
       "process": "wps.exe",
       "state": "system",
@@ -701,12 +642,10 @@
         "pin_anchor_when_start_drifts": true,
         "process": "wps.exe"
       },
-      "title": "",
       "unknownKeys": [],
       "user": null
     },
     {
-      "class": "",
       "effective": {
         "host_render": true,
         "process": "SearchHost.exe"
@@ -754,12 +693,6 @@
           "userValue": null,
           "value": false
         },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
         "composition_start_pair_guard": {
           "source": "default",
           "systemValue": null,
@@ -797,12 +730,6 @@
           "value": null
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -864,7 +791,6 @@
         }
       },
       "hasUserEntry": false,
-      "key": "searchhost.exe\u001f\u001f",
       "overridden": [],
       "process": "SearchHost.exe",
       "state": "system",
@@ -872,14 +798,14 @@
         "host_render": true,
         "process": "SearchHost.exe"
       },
-      "title": "",
       "unknownKeys": [],
       "user": null
     },
     {
-      "class": "",
       "effective": {
+        "comment": "QQ 主窗：首键等精确坐标",
         "composition_start_pair_guard": true,
+        "first_show_mode": "wait",
         "process": "QQ.exe"
       },
       "fields": {
@@ -925,12 +851,6 @@
           "userValue": null,
           "value": false
         },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
         "composition_start_pair_guard": {
           "source": "system",
           "systemValue": true,
@@ -938,10 +858,10 @@
           "value": true
         },
         "first_show_mode": {
-          "source": "default",
-          "systemValue": null,
+          "source": "system",
+          "systemValue": "wait",
           "userValue": null,
-          "value": null
+          "value": "wait"
         },
         "host_drawn_candidates": {
           "source": "default",
@@ -968,12 +888,6 @@
           "value": null
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -1035,20 +949,19 @@
         }
       },
       "hasUserEntry": false,
-      "key": "qq.exe\u001f\u001f",
       "overridden": [],
       "process": "QQ.exe",
       "state": "system",
       "system": {
+        "comment": "QQ 主窗：首键等精确坐标",
         "composition_start_pair_guard": true,
+        "first_show_mode": "wait",
         "process": "QQ.exe"
       },
-      "title": "",
       "unknownKeys": [],
       "user": null
     },
     {
-      "class": "",
       "effective": {
         "host_drawn_candidates": true,
         "process": "Dota2.exe"
@@ -1096,12 +1009,6 @@
           "userValue": null,
           "value": false
         },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
         "composition_start_pair_guard": {
           "source": "default",
           "systemValue": null,
@@ -1139,12 +1046,6 @@
           "value": null
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -1206,7 +1107,6 @@
         }
       },
       "hasUserEntry": true,
-      "key": "dota2.exe\u001f\u001f",
       "overridden": [
         "disabled"
       ],
@@ -1216,7 +1116,6 @@
         "host_drawn_candidates": true,
         "process": "Dota2.exe"
       },
-      "title": "",
       "unknownKeys": [],
       "user": {
         "disabled": true,
@@ -1224,352 +1123,8 @@
       }
     },
     {
-      "class": "TXGuiFoundation",
       "effective": {
-        "comment": "QQ 主窗：首键等精确坐标",
-        "first_show_mode": "wait",
-        "process": "QQ.exe"
-      },
-      "fields": {
-        "auto_pair": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "candidate_position_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "candidate_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "candidate_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_offset_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_offset_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_use_top": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "composition_start_pair_guard": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "first_show_mode": {
-          "source": "system",
-          "systemValue": "wait",
-          "userValue": null,
-          "value": "wait"
-        },
-        "host_drawn_candidates": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "host_render": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "ignore_host_ime_close": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "initial_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "password_force_english": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "pin_anchor_when_start_drifts": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "schema": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "smart_method": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "stale_probe_guard": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "status_fallback_position": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "status_position_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "status_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "status_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        }
-      },
-      "hasUserEntry": false,
-      "key": "qq.exe\u001ftxguifoundation\u001f",
-      "overridden": [],
-      "process": "QQ.exe",
-      "state": "system",
-      "system": {
-        "comment": "QQ 主窗：首键等精确坐标",
-        "first_show_mode": "wait",
-        "process": "QQ.exe"
-      },
-      "title": "",
-      "unknownKeys": [],
-      "user": null
-    },
-    {
-      "class": "Chrome_WidgetWin_*",
-      "effective": {
-        "composition_placeholder": "zwsp",
-        "process": ""
-      },
-      "fields": {
-        "auto_pair": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "candidate_position_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "candidate_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "candidate_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_offset_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_offset_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_use_top": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "composition_placeholder": {
-          "source": "system",
-          "systemValue": "zwsp",
-          "userValue": null,
-          "value": "zwsp"
-        },
-        "composition_start_pair_guard": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "first_show_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "host_drawn_candidates": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "host_render": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "ignore_host_ime_close": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "initial_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "password_force_english": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "pin_anchor_when_start_drifts": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "schema": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "smart_method": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "stale_probe_guard": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "status_fallback_position": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "status_position_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "status_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "status_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        }
-      },
-      "hasUserEntry": false,
-      "key": "*\u001fchrome_widgetwin_*\u001f",
-      "overridden": [],
-      "process": "*",
-      "state": "system",
-      "system": {
-        "composition_placeholder": "zwsp",
-        "process": ""
-      },
-      "title": "",
-      "unknownKeys": [],
-      "user": null
-    },
-    {
-      "class": "",
-      "effective": {
+        "auto_pair": true,
         "caret_offset_y": 4,
         "first_show_mode": "fast",
         "initial_mode": "english",
@@ -1578,10 +1133,10 @@
       },
       "fields": {
         "auto_pair": {
-          "source": "default",
+          "source": "user",
           "systemValue": null,
-          "userValue": null,
-          "value": null
+          "userValue": true,
+          "value": true
         },
         "candidate_position_mode": {
           "source": "default",
@@ -1618,12 +1173,6 @@
           "systemValue": null,
           "userValue": null,
           "value": false
-        },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
         },
         "composition_start_pair_guard": {
           "source": "default",
@@ -1662,12 +1211,6 @@
           "value": "english"
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -1729,8 +1272,8 @@
         }
       },
       "hasUserEntry": true,
-      "key": "tabby.exe\u001f\u001f",
       "overridden": [
+        "auto_pair",
         "caret_offset_y",
         "first_show_mode",
         "initial_mode",
@@ -1739,198 +1282,24 @@
       "process": "Tabby.exe",
       "state": "user",
       "system": null,
-      "title": "",
       "unknownKeys": [
-        "future_key"
+        "future_key",
+        "title"
       ],
       "user": {
+        "auto_pair": true,
         "caret_offset_y": 4,
         "first_show_mode": "fast",
         "future_key": 3,
         "initial_mode": "english",
         "initial_punct": "englsh",
         "process": "Tabby.exe",
-        "smart_method": "hold_composition"
-      }
-    },
-    {
-      "class": "",
-      "effective": {
-        "auto_pair": true,
-        "process": "Tabby.exe"
-      },
-      "fields": {
-        "auto_pair": {
-          "source": "user",
-          "systemValue": null,
-          "userValue": true,
-          "value": true
-        },
-        "candidate_position_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "candidate_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "candidate_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_offset_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_offset_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "caret_use_top": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "composition_placeholder": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "composition_start_pair_guard": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "first_show_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "host_drawn_candidates": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "host_render": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "ignore_host_ime_close": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "initial_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "password_force_english": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "pin_anchor_when_start_drifts": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "schema": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "smart_method": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "stale_probe_guard": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": false
-        },
-        "status_fallback_position": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "status_position_mode": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "status_x": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        },
-        "status_y": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": 0
-        }
-      },
-      "hasUserEntry": true,
-      "key": "tabby.exe\u001f\u001fssh*",
-      "overridden": [
-        "auto_pair"
-      ],
-      "process": "Tabby.exe",
-      "state": "user",
-      "system": null,
-      "title": "SSH*",
-      "unknownKeys": [],
-      "user": {
-        "auto_pair": true,
-        "process": "Tabby.exe",
+        "smart_method": "hold_composition",
         "title": "SSH*"
       }
     },
     {
-      "class": "MozillaWindowClass",
       "effective": {
-        "composition_placeholder": "zwsp",
         "process": "*"
       },
       "fields": {
@@ -1976,12 +1345,6 @@
           "userValue": null,
           "value": false
         },
-        "composition_placeholder": {
-          "source": "user",
-          "systemValue": null,
-          "userValue": "zwsp",
-          "value": "zwsp"
-        },
         "composition_start_pair_guard": {
           "source": "default",
           "systemValue": null,
@@ -2019,12 +1382,6 @@
           "value": null
         },
         "initial_punct": {
-          "source": "default",
-          "systemValue": null,
-          "userValue": null,
-          "value": null
-        },
-        "multiline_commit": {
           "source": "default",
           "systemValue": null,
           "userValue": null,
@@ -2086,15 +1443,14 @@
         }
       },
       "hasUserEntry": true,
-      "key": "*\u001fmozillawindowclass\u001f",
-      "overridden": [
-        "composition_placeholder"
-      ],
+      "overridden": [],
       "process": "*",
       "state": "user",
       "system": null,
-      "title": "",
-      "unknownKeys": [],
+      "unknownKeys": [
+        "class",
+        "composition_placeholder"
+      ],
       "user": {
         "class": "MozillaWindowClass",
         "composition_placeholder": "zwsp",
@@ -2104,12 +1460,10 @@
   ],
   "warnings": [
     {
-      "class": "",
       "key": "initial_punct",
       "message": "字段 initial_punct 的值 \"englsh\" 无效，已忽略",
       "process": "Tabby.exe",
-      "section": "apps",
-      "title": ""
+      "section": "apps"
     }
   ]
 }

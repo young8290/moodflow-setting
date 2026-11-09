@@ -132,20 +132,25 @@ pub fn is_loopback_host(host: &str) -> bool {
 }
 
 pub fn is_allowed_origin(origin: &str) -> bool {
-    let lower = origin.trim().to_ascii_lowercase();
-    if lower.starts_with("http://localhost:") || lower == "http://localhost" {
-        return true;
+    let Ok(url) = url::Url::parse(origin) else {
+        return false;
+    };
+    if url.scheme() != "http"
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.path() != "/"
+        || url.query().is_some()
+        || url.fragment().is_some()
+    {
+        return false;
     }
-    if lower.starts_with("http://127.0.0.1:") || lower == "http://127.0.0.1" {
-        return true;
-    }
-    if lower.starts_with("http://[::1]:") || lower == "http://[::1]" {
-        return true;
-    }
-    if lower == "https://windinput.com" {
-        return true;
-    }
-    lower.starts_with("https://") && lower.ends_with(".windinput.com")
+    url.host_str().is_some_and(|host| {
+        host.eq_ignore_ascii_case("localhost")
+            || host
+                .trim_matches(['[', ']'])
+                .parse::<IpAddr>()
+                .is_ok_and(|ip| ip.is_loopback())
+    })
 }
 
 // 取 request-target 中的路径部分（丢弃 ?query）。fragment 不会由客户端发出，无需处理。
@@ -312,13 +317,13 @@ fn respond(req: tiny_http::Request, reply: HttpReply) {
     ) {
         response = response.with_header(header);
     }
-    if let Some(origin) = reply.allow_origin {
-        if let Ok(header) = tiny_http::Header::from_bytes(
+    if let Some(origin) = reply.allow_origin
+        && let Ok(header) = tiny_http::Header::from_bytes(
             b"Access-Control-Allow-Origin" as &[u8],
             origin.as_bytes(),
-        ) {
-            response = response.with_header(header);
-        }
+        )
+    {
+        response = response.with_header(header);
     }
     let _ = req.respond(response);
 }
@@ -419,13 +424,13 @@ mod tests {
     }
 
     #[test]
-    fn allowed_origin_accepts_windinput_and_local_dev() {
-        assert!(is_allowed_origin("https://windinput.com"));
-        assert!(is_allowed_origin("https://theme.windinput.com"));
+    fn allowed_origin_accepts_moodflow_and_local_dev() {
+        assert!(!is_allowed_origin("https://github.com/young8290/Moodflow"));
+        assert!(!is_allowed_origin("https://theme.moodflow.com"));
         assert!(is_allowed_origin("http://localhost:5173"));
         assert!(is_allowed_origin("http://127.0.0.1:5173"));
         assert!(!is_allowed_origin("https://evil.com"));
-        assert!(!is_allowed_origin("http://windinput.com.evil.com"));
+        assert!(!is_allowed_origin("http://moodflow.com.evil.com"));
     }
 
     #[test]
@@ -514,11 +519,8 @@ mod handler_tests {
     }
 
     #[test]
-    fn allow_windinput_origin() {
-        let r = guard_request("localhost:29731", Some("https://theme.windinput.com")).unwrap();
-        assert_eq!(
-            r.allow_origin.as_deref(),
-            Some("https://theme.windinput.com")
-        );
+    fn allow_moodflow_origin() {
+        let r = guard_request("localhost:29731", Some("http://localhost:5173")).unwrap();
+        assert_eq!(r.allow_origin.as_deref(), Some("http://localhost:5173"));
     }
 }

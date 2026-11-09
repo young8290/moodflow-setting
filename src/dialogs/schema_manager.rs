@@ -121,6 +121,10 @@ pub(crate) fn fetch_shuangpin_layouts() -> Vec<(String, String)> {
 }
 
 /// `list_signal` 的数据项：行/分节标题/行间分隔线。
+#[allow(
+    clippy::large_enum_variant,
+    reason = "Small bounded UI list; owning preview data keeps signal callbacks simple"
+)]
 #[derive(Clone)]
 pub enum SchemaListItem {
     Row {
@@ -2310,10 +2314,10 @@ impl SchemaManagerState {
     pub fn move_schema_up(&self, schema_id: &str) {
         {
             let mut order = self.enabled_order.borrow_mut();
-            if let Some(idx) = order.iter().position(|id| id == schema_id) {
-                if idx > 0 {
-                    order.swap(idx, idx - 1);
-                }
+            if let Some(idx) = order.iter().position(|id| id == schema_id)
+                && idx > 0
+            {
+                order.swap(idx, idx - 1);
             }
         }
         self.notify(ToastKind::Success, "排序已调整（保存后生效）");
@@ -2324,10 +2328,10 @@ impl SchemaManagerState {
     pub fn move_schema_down(&self, schema_id: &str) {
         {
             let mut order = self.enabled_order.borrow_mut();
-            if let Some(idx) = order.iter().position(|id| id == schema_id) {
-                if idx + 1 < order.len() {
-                    order.swap(idx, idx + 1);
-                }
+            if let Some(idx) = order.iter().position(|id| id == schema_id)
+                && idx + 1 < order.len()
+            {
+                order.swap(idx, idx + 1);
             }
         }
         self.notify(ToastKind::Success, "排序已调整（保存后生效）");
@@ -5810,7 +5814,7 @@ mod ext_dict_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mgr = SchemaManagerState::new();
 
         let preview = json!({
@@ -5852,7 +5856,7 @@ mod ext_dict_tests {
         mgr.cancel_import();
         assert!(!mgr.import_confirm_visible.get());
         assert!(mgr.import_patch_rows.get().is_empty(), "取消须清空区块");
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 协议下载来的临时包跟着待导入项走：取消、被下一个包顶替、确认导入后都删掉文件；
@@ -5862,7 +5866,7 @@ mod ext_dict_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let dir = std::env::temp_dir().join(format!("wind_setting_dl_mgr_{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let save = || crate::schema_url_import::save_package(&dir, b"PK").unwrap();
@@ -5893,7 +5897,7 @@ mod ext_dict_tests {
         assert!(local.exists(), "用户自己的包不删");
 
         let _ = std::fs::remove_dir_all(&dir);
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 两级说明在确认对话框上**各显各的**：包级取自响应顶层（package.toml / 信封
@@ -5906,7 +5910,7 @@ mod ext_dict_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mgr = SchemaManagerState::new();
 
         mgr.open_import_confirm(
@@ -5973,7 +5977,7 @@ mod ext_dict_tests {
         );
         mgr.cancel_import();
         assert!(mgr.import_pkg_title.get().is_empty(), "取消须清空说明");
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 确认导入的两步编排：第二步 `config.applyPatch` 的 `written` 必须原样回传给
@@ -5984,7 +5988,7 @@ mod ext_dict_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mgr = SchemaManagerState::new();
 
         // 带片段的包：走完两步，拿到 written。
@@ -6009,7 +6013,7 @@ mod ext_dict_tests {
 
         // 没有待导入项（重复点击/已取消）：静默返回空，不发 RPC。
         assert!(mgr.confirm_import("merge").is_empty());
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 信封分支的端到端：**发出去的请求**长什么样。
@@ -6023,7 +6027,7 @@ mod ext_dict_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mgr = SchemaManagerState::new();
 
         let envelope = "[package]\nformat_version = 2\nkind = \"schema_text\"\n";
@@ -6067,7 +6071,7 @@ mod ext_dict_tests {
             written.iter().any(|(k, _)| k == "keys.key_actions"),
             "written 应来自 applyPatch 响应，实际: {written:?}"
         );
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 「本方案行为」三项的播种：缺段时的默认值必须与 core 一致。
@@ -6228,7 +6232,7 @@ mod ext_dict_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let state = SchemaManagerState::new();
         state.settings_bh_punct.set(2);
         state.settings_bh_layout.set(1);
@@ -6254,7 +6258,7 @@ mod ext_dict_tests {
             1,
             "无跟随档的项不被动到"
         );
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 未知取值一律回落「跟随全局」，不猜方向。
@@ -6743,7 +6747,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let state = SchemaManagerState::new();
         state.settings_aux_on_over.set(true);
         state.settings_aux_on.set(false);
@@ -6767,7 +6771,7 @@ mod section_build_tests {
             ),
             (Value::Null, Value::Null)
         );
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 「本方案直接辅助码」落盘同「启用辅助码」：未勾 null（回落全局），勾上写布尔。
@@ -6815,7 +6819,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let state = SchemaManagerState::new();
         state.settings_aux_direct_over.set(true);
         state.settings_aux_direct.set(false);
@@ -6831,7 +6835,7 @@ mod section_build_tests {
             ),
             Value::Null
         );
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 全局 manifest 该项 min/max 是 0..=20；手改 `config.toml` 能写出这个范围，
@@ -6946,14 +6950,14 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let state = SchemaManagerState::new();
         // 遍历 `SettingsSection::ALL`：列表挂在 enum 定义旁边，新增变体时看得见。
         // ⚠️ 它仍是手写的——之前这份列表就写在这里，`Behavior` 节加进来时漏掉了整整一轮。
         for &kind in SettingsSection::ALL {
             let _ = build_section(kind, &state);
         }
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// Review Focus 3：下拉首项的跟随文案必须来自**本次打开**对话框时的
@@ -6968,7 +6972,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         crate::rpc::set_mock_followed_layout(Some("horizontal"));
 
         let state = SchemaManagerState::new();
@@ -6995,7 +6999,7 @@ mod section_build_tests {
         );
 
         crate::rpc::set_mock_followed_layout(None);
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     // ── 辅助码来源（`[engine.aux_code].files`）──
@@ -7107,7 +7111,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let state = SchemaManagerState::new();
         state.settings_aux_src_over.set(true);
         state.settings_aux_src_manual.set(true);
@@ -7117,7 +7121,7 @@ mod section_build_tests {
 
         assert!(!state.settings_aux_src_over.get());
         assert!(!state.settings_aux_src_manual.get());
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 测试用：mock 下打开拼音族方案（`auxCodeBaseFiles` 与合并后的 `files` 相同 ⇒ 跟随）。
@@ -7156,7 +7160,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         // 打开时方案里已有带真换行 / 反斜杠的模板：显示转义、原样不改就不脏。
         let raw_v = "${pinyin}\n${chaizi}";
@@ -7201,7 +7205,7 @@ mod section_build_tests {
         state.seed_comment_tpl(&BehaviorSeed::default());
         assert!(!state.settings_bh_comment_v_on.get());
         assert_eq!(state.settings_bh_comment_v.get(), "");
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 双拼方案：直接辅助码一行显示（`settings_is_shuangpin` 即渲染判据）、跟随全局值；
@@ -7211,7 +7215,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let state = open_mock_shuangpin();
         assert!(
@@ -7252,7 +7256,7 @@ mod section_build_tests {
             .clone()
             .unwrap();
         assert_eq!(cfg["engine"]["aux_code"]["direct"], Value::Null);
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 全拼方案：直接辅助码一行不显示、不勾；保存不写 `direct`（连 null 都不写）。
@@ -7261,7 +7265,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let state = open_mock_pinyin();
         assert!(
@@ -7280,7 +7284,7 @@ mod section_build_tests {
             cfg.pointer("/engine/aux_code/direct").is_none(),
             "全拼方案不该出现 direct 键：{cfg}"
         );
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// ★ 打开即关不脏：默认跟随时来源这一行不往 cfg 里写任何东西（尤其不写 null——
@@ -7290,7 +7294,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let state = open_mock_pinyin();
         assert!(!state.settings_aux_src_over.get(), "合并值 = 方案值 ⇒ 跟随");
@@ -7308,7 +7312,7 @@ mod section_build_tests {
             !state.has_pending_edits(),
             "什么都没改，不该有待提交的方案改动"
         );
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 勾上并选一项 ⇒ `files` 写成单元素数组；再取消勾选 ⇒ 写 null（回落方案文件）。
@@ -7317,7 +7321,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let state = open_mock_pinyin();
         let flypy = state
@@ -7346,7 +7350,7 @@ mod section_build_tests {
             .clone()
             .unwrap();
         assert_eq!(cfg["engine"]["aux_code"]["files"], Value::Null);
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 跟随态的下拉下标 seed 成**当前生效**的那一项：用户勾上时下拉停在它上面，
@@ -7356,7 +7360,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let state = open_mock_pinyin();
         let bihua = state
@@ -7379,7 +7383,7 @@ mod section_build_tests {
             cfg["engine"]["aux_code"]["files"],
             json!(["aux_code/bihua.txt"])
         );
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 「全部恢复跟随」把下拉下标也拨回生效项——同 `aux_reset_all` 对另两行「控件值拨回
@@ -7389,7 +7393,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let state = open_mock_pinyin();
         let bihua = state.settings_aux_src_idx.get();
@@ -7399,7 +7403,7 @@ mod section_build_tests {
 
         aux_reset_all(&state, true, 4, false);
         assert_eq!(state.settings_aux_src_idx.get(), bihua);
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 只读态文案：说的是**现状**（手写在方案覆盖里的来源），不指路去方案文件——
@@ -7433,7 +7437,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let state = open_mock_pinyin();
         state.settings_aux_src_over.set(true);
@@ -7447,7 +7451,7 @@ mod section_build_tests {
             .clone()
             .unwrap();
         assert_eq!(cfg["engine"]["aux_code"]["files"], Value::Null);
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 只读态（多条 / 下拉里没有）保存原样不动；被「全部恢复跟随」清掉后才写 null。
@@ -7456,7 +7460,7 @@ mod section_build_tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         // 模拟打开时 seed 出只读态（mock 的 files 是单条已知项，造不出来，直接设信号）。
         let state = open_mock_pinyin();
@@ -7473,7 +7477,7 @@ mod section_build_tests {
             .clone()
             .unwrap();
         assert_eq!(cfg["engine"]["aux_code"]["files"], Value::Null);
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 }
 
@@ -7744,7 +7748,7 @@ mod hotkey_save_pipeline_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         // 基线：用户原本已有一条别的绑定，用来验证写回不会把它冲掉。
         let base = json!({
@@ -7801,7 +7805,7 @@ mod hotkey_save_pipeline_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         let base = json!({ "keys": { "key_actions": {} } });
         st.base_config = Config::from_value(base.clone());
@@ -7842,7 +7846,7 @@ mod hotkey_save_pipeline_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         let base = json!({
             "keys": { "key_actions": { "ctrl+shift+n": "toggle_schema:english" } }
@@ -7870,7 +7874,7 @@ mod hotkey_save_pipeline_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         let base = json!({
             "keys": { "key_actions": { "ctrl+shift+n": "toggle_schema:english" } }
@@ -7915,7 +7919,7 @@ mod hotkey_save_pipeline_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let st = SchemaManagerState::new();
         st.key_actions.borrow_mut().insert(
@@ -7958,7 +7962,7 @@ mod hotkey_save_pipeline_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let st = AppState::empty();
         st.schema_mgr.key_actions.borrow_mut().clear();
         st.schema_mgr.key_actions_loaded.set(false);
@@ -8016,7 +8020,7 @@ mod hotkey_save_pipeline_tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let mut st = AppState::empty();
         let base = json!({
             "keys": { "key_actions": { "ctrl+shift+n": "toggle_schema:english" } }

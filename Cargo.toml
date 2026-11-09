@@ -5,11 +5,11 @@ edition = "2024"
 license = "GPL-3.0-or-later"
 
 [dependencies]
-windui = { path = "../wind-ui-rust" }
-wind-ipc = { path = "../WindInput/wind_input/crates/wind-ipc" }
+windui = { version = "=0.31.0" }
+wind-ipc = { package = "moodflow-ipc", path = "../Moodflow/moodflow_input/crates/moodflow-ipc" }
 # 定制版清单（`data_custom/custom.toml`）与 `[settings] hide` 选择器：与 core 同一份解析，
 # 页面树建成之前就要知道哪些设置项不建（见 `custom_hide.rs`），等不到 `system.info`。
-wind-config = { path = "../WindInput/wind_input/crates/wind-config" }
+wind-config = { package = "moodflow-config", path = "../Moodflow/moodflow_input/crates/moodflow-config" }
 serde = { version = "1", features = ["derive"] }
 # 用户配置/本机状态目录：与 core（wind-config）同一 crate 同一大版本，
 # 保证两边算出的目录在各平台上落到同一处。
@@ -21,6 +21,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
 tracing-appender = "0.2"
 toml = "0.8"
 ureq = "2"
+url = "2"
 tiny_http = "0.12"
 # 升级版本比较：prerelease 与数字标识符的序由规范定义，不自行实现
 semver = "1"
@@ -31,11 +32,11 @@ sha2 = "0.10"
 # 仅测试用：core 的 capability 生成器与配置真相源，供守护 capabilities.snapshot.json
 # 与 mockdata/config.json 不与 core 漂移。
 # core 仓已因 wind-ipc 成为硬依赖，此处不引入新的路径前提。
-wind-rpc = { path = "../WindInput/wind_input/crates/wind-rpc" }
+wind-rpc = { package = "moodflow-rpc", path = "../Moodflow/moodflow_input/crates/moodflow-rpc" }
 # 标点转换真相源：守护 PUNCT_DEFAULTS（设置页那份四列默认表）不与 core 的转换
 # 流水线漂移。漂移的表现是「不动也判脏」，没有堆栈、只能靠这条测试看见。
-wind-punct = { path = "../WindInput/wind_input/crates/wind-punct" }
-wind-transform = { path = "../WindInput/wind_input/crates/wind-transform" }
+wind-punct = { package = "moodflow-punct", path = "../Moodflow/moodflow_input/crates/moodflow-punct" }
+wind-transform = { package = "moodflow-transform", path = "../Moodflow/moodflow_input/crates/moodflow-transform" }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"
@@ -65,3 +66,5 @@ opt-level = 1
 # "panic in a function that cannot unwind" —— 正是 WindInput #67 查不动的那种日志。
 # 为压体积动这里之前，先读 windui Cargo.toml 里 objc2 依赖处的说明。
 panic = "unwind"
+
+[workspace]
