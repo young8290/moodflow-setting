@@ -33,7 +33,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: moodflow-setting
-      - run: cargo fmt --all --check
+      # --all 还会把整个核心 path 依赖树放进同一条 rustfmt 命令，超过 Windows 命令行长度。
+      # 核心 workspace 自身的 CI 检查依赖源码；这里检查设置端所有本地目标。
+      - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test -- --test-threads=2
       - run: cargo build --release
