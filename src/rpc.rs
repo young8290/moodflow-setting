@@ -262,7 +262,10 @@ fn connect_pipe(endpoint: &str, max_attempts: u32) -> std::io::Result<std::fs::F
             .write(true)
             .open(endpoint)
         {
-            Ok(s) => return Ok(s),
+            Ok(s) => {
+                wind_rpc::verify_server(&s)?;
+                return Ok(s);
+            }
             Err(e) => {
                 let code = e.raw_os_error().unwrap_or(0);
                 // 231 = ERROR_PIPE_BUSY：服务存在但繁忙，重试有意义。
@@ -295,9 +298,7 @@ const EVENTS_RECONNECT_DELAY: std::time::Duration = std::time::Duration::from_se
 /// （`moodflow_rpc_ctrl{suffix}`），events 是中间化（`moodflow_rpc{suffix}_events`）——
 /// 见 wind-rpc/src/server.rs 的 `ctrl_endpoint` / `events_endpoint`。
 ///
-/// 这里手抄格式而非直接调 core 的函数：wind-rpc 只是 dev-dependency（运行时依赖
-/// 刻意只保留轻量的 wind-ipc，见 Cargo.toml）。抄错的后果是静默连不上——事件永远
-/// 收不到，而不是报错，故由 [`tests::events_endpoint_matches_core`] 对账兜住。
+/// 端点字符串由测试与 core 对账；Windows 上的服务端身份检查直接复用 wind-rpc。
 pub fn events_endpoint() -> String {
     let suffix = endpoint_suffix();
     #[cfg(windows)]
@@ -323,7 +324,9 @@ pub struct CoreEvent {
 /// **必须只读打开**——带上 write 权限会被拒（不同于双向的 ctrl 通道）。
 #[cfg(windows)]
 fn open_events_stream(endpoint: &str) -> std::io::Result<std::fs::File> {
-    std::fs::OpenOptions::new().read(true).open(endpoint)
+    let stream = std::fs::OpenOptions::new().read(true).open(endpoint)?;
+    wind_rpc::verify_server(&stream)?;
+    Ok(stream)
 }
 
 #[cfg(unix)]

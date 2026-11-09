@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: young8290/Moodflow
-          ref: af3dcfa46ba14c4c1fa7a6a0f923f2007cf4b5b2
+          ref: d7cea5a69d97f672222f337dbbbcf2a7b9b2e369
           path: Moodflow
       - uses: dtolnay/rust-toolchain@stable
         with:

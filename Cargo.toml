@@ -39,6 +39,7 @@ wind-punct = { package = "moodflow-punct", path = "../Moodflow/moodflow_input/cr
 wind-transform = { package = "moodflow-transform", path = "../Moodflow/moodflow_input/crates/moodflow-transform" }
 
 [target.'cfg(windows)'.dependencies]
+wind-rpc = { package = "moodflow-rpc", path = "../Moodflow/moodflow_input/crates/moodflow-rpc" }
 winreg = "0.52"
 # 设置页字体下拉按 DirectWrite family 枚举（与 core 渲染端同一字体模型，见 state.rs
 # `load_fonts`）。版本与 windui 对齐，不新增编译单元。
