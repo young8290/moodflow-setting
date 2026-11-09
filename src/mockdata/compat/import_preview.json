@@ -9,46 +9,31 @@
   "items": [
     {
       "action": "add",
-      "class": "",
       "process": "Brand.exe",
-      "section": "apps",
-      "title": ""
+      "section": "apps"
     },
     {
       "action": "override",
-      "class": "",
       "process": "Weixin.exe",
-      "section": "apps",
-      "title": ""
+      "section": "apps"
     },
     {
       "action": "disable",
-      "class": "",
       "process": "QQ.exe",
-      "section": "apps",
-      "title": ""
+      "section": "apps"
     },
     {
       "action": "unchanged",
-      "class": "",
       "process": "Feishu.exe",
-      "section": "apps",
-      "title": ""
+      "section": "apps"
     },
     {
       "action": "unchanged",
-      "class": "",
       "process": "wps.exe",
-      "section": "apps",
-      "title": ""
-    },
-    {
-      "action": "add",
-      "class": "AutoHotkeyGUI",
-      "process": "*",
-      "section": "apps",
-      "title": ""
+      "section": "apps"
     }
   ],
-  "rejected": []
+  "rejected": [
+    "apps: 缺少 process"
+  ]
 }

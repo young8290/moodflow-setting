@@ -1,13 +1,14 @@
 {
-  "appVersion": "0.122.0",
+  "appVersion": "0.124.1-beta",
   "configKeys": [
     {
-      "default": "wubi86",
+      "default": "pinyin",
       "key": "schema.active",
       "type": "str"
     },
     {
       "default": [
+        "pinyin",
         "wubi86",
         "wubi86_pinyin"
       ],
@@ -23,11 +24,6 @@
       "default": "",
       "key": "schema.primary_pinyin",
       "type": "str"
-    },
-    {
-      "default": false,
-      "key": "schema.keep_all_loaded",
-      "type": "bool"
     },
     {
       "default": true,
@@ -219,15 +215,6 @@
       "type": "bool"
     },
     {
-      "default": false,
-      "key": "schema.codetable.frequency.record_always",
-      "schemaOverride": {
-        "note": "码表方案可逐项覆盖这里的调频设置；方案没写的项仍然用这里的值。",
-        "section": "[engine.codetable.frequency]"
-      },
-      "type": "bool"
-    },
-    {
       "default": 0,
       "key": "schema.codetable.frequency.protect_top_n",
       "schemaOverride": {
@@ -306,11 +293,6 @@
       "type": "bool"
     },
     {
-      "default": false,
-      "key": "schema.english.frequency.record_always",
-      "type": "bool"
-    },
-    {
       "default": "position",
       "key": "schema.english.frequency.strategy",
       "type": "enum",
@@ -373,21 +355,6 @@
       "default": false,
       "key": "schema.english.phrase_seg",
       "type": "bool"
-    },
-    {
-      "default": false,
-      "key": "schema.english.auto_learn.enabled",
-      "type": "bool"
-    },
-    {
-      "default": 3,
-      "key": "schema.english.auto_learn.promote_count",
-      "type": "int"
-    },
-    {
-      "default": 5000,
-      "key": "schema.english.auto_learn.temp_max_entries",
-      "type": "int"
     },
     {
       "default": false,
@@ -566,11 +533,6 @@
       "type": "bool"
     },
     {
-      "default": false,
-      "key": "schema.pinyin.frequency.record_always",
-      "type": "bool"
-    },
-    {
       "default": 0.0,
       "key": "schema.pinyin.frequency.half_life",
       "type": "float"
@@ -624,11 +586,6 @@
       "default": 5,
       "key": "schema.pinyin.completion.max_extra_syllables",
       "type": "int"
-    },
-    {
-      "default": true,
-      "key": "schema.pinyin.abbrev.enabled",
-      "type": "bool"
     },
     {
       "default": 0.0,
@@ -728,11 +685,6 @@
       "type": "bool"
     },
     {
-      "default": true,
-      "key": "schema.mix.pinyin_code_hint",
-      "type": "bool"
-    },
-    {
       "default": false,
       "key": "schema.mix.pinyin_partial_candidates",
       "type": "bool"
@@ -745,11 +697,6 @@
     {
       "default": 6,
       "key": "schema.quick_input.decimal_places",
-      "type": "int"
-    },
-    {
-      "default": 1000,
-      "key": "schema.quick_input.history_max",
       "type": "int"
     },
     {
@@ -1040,15 +987,6 @@
       ]
     },
     {
-      "default": "buffer",
-      "key": "input.temp_english.shift_when_composing",
-      "type": "enum",
-      "values": [
-        "buffer",
-        "commit_enter"
-      ]
-    },
-    {
       "default": [],
       "key": "input.temp_english.trigger_keys",
       "type": "strlist"
@@ -1132,16 +1070,6 @@
       "default": false,
       "key": "input.capslock.cancel_on_mode_switch",
       "type": "bool"
-    },
-    {
-      "default": "chinese",
-      "key": "input.capslock.mode_after_cancel",
-      "type": "enum",
-      "values": [
-        "chinese",
-        "english",
-        "toggle"
-      ]
     },
     {
       "default": true,
@@ -1305,39 +1233,25 @@
       ]
     },
     {
-      "default": 3,
-      "key": "input.emoji.max_per_word",
-      "type": "int"
-    },
-    {
-      "default": 1,
-      "key": "input.emoji.max_hosts",
-      "type": "int"
-    },
-    {
-      "default": 2,
-      "key": "input.emoji.min_word_chars",
-      "type": "int"
-    },
-    {
-      "default": false,
-      "key": "input.emoji.categories",
-      "type": "bool"
-    },
-    {
-      "default": {
-        "frost_chem": false,
-        "frost_diezi": false,
-        "frost_emoji": true,
-        "frost_greek": false,
-        "frost_keys": false,
-        "frost_misc": false,
-        "frost_month": false,
-        "frost_radicals": false,
-        "frost_sitcom": false
-      },
-      "key": "input.emoji.modules",
-      "type": "map"
+      "default": [
+        {
+          "enabled": true,
+          "id": "symbols",
+          "path": "system.symbols.toml"
+        },
+        {
+          "enabled": true,
+          "id": "word",
+          "path": "emoji/emoji_word.txt"
+        },
+        {
+          "enabled": false,
+          "id": "category",
+          "path": "emoji/emoji_category.txt"
+        }
+      ],
+      "key": "input.emoji.tables",
+      "type": "structlist"
     },
     {
       "default": "follow",
@@ -1458,11 +1372,6 @@
       "type": "bool"
     },
     {
-      "default": true,
-      "key": "input.association.select_keys_commit",
-      "type": "bool"
-    },
-    {
       "default": false,
       "key": "input.association.enter_cancels_only",
       "type": "bool"
@@ -1513,11 +1422,6 @@
     {
       "default": true,
       "key": "keys.commit_on_switch",
-      "type": "bool"
-    },
-    {
-      "default": true,
-      "key": "keys.ctrl_space_toggle",
       "type": "bool"
     },
     {
@@ -1594,6 +1498,43 @@
       "default": "ctrl+shift+k",
       "key": "keys.softkeyboard",
       "type": "str"
+    },
+    {
+      "default": "ctrl+shift+h",
+      "key": "keys.clipboard_panel",
+      "type": "str"
+    },
+    {
+      "default": "alt+shift+b",
+      "key": "keys.toggle_buffer",
+      "type": "str"
+    },
+    {
+      "default": "ctrl+shift+enter",
+      "key": "keys.buffer_send",
+      "type": "str"
+    },
+    {
+      "default": 1200,
+      "key": "input.buffer.hold_ms",
+      "type": "int"
+    },
+    {
+      "default": "off",
+      "key": "input.buffer.pace",
+      "type": "enum",
+      "values": [
+        "off",
+        "1s",
+        "2s",
+        "3s",
+        "5s"
+      ]
+    },
+    {
+      "default": false,
+      "key": "input.buffer.close_after_send",
+      "type": "bool"
     },
     {
       "default": [],
@@ -1673,6 +1614,11 @@
       "default": 7,
       "key": "ui.candidate.per_page",
       "type": "int"
+    },
+    {
+      "default": false,
+      "key": "ui.candidate.matrix",
+      "type": "bool"
     },
     {
       "default": 0,
@@ -1789,11 +1735,6 @@
       "default": 0,
       "key": "ui.candidate.min_rows",
       "type": "int"
-    },
-    {
-      "default": true,
-      "key": "ui.candidate.comment_enabled",
-      "type": "bool"
     },
     {
       "default": "${code_hint|code_rev|shuangpin}",
@@ -1965,11 +1906,6 @@
       ]
     },
     {
-      "default": true,
-      "key": "ui.tooltip.enabled",
-      "type": "bool"
-    },
-    {
       "default": 200,
       "key": "ui.tooltip.delay",
       "type": "int"
@@ -2017,14 +1953,6 @@
           "label": "拆字",
           "promote": "",
           "template": "${char}：${chaizi}{ [${chaizi_code}]}"
-        },
-        {
-          "each": "",
-          "enabled": true,
-          "inline": false,
-          "label": "释义",
-          "promote": "",
-          "template": "${dict_all:\n}"
         },
         {
           "each": "char",
@@ -2190,6 +2118,7 @@
         "-s2t",
         "-t2s",
         "soft_keyboard",
+        "moodflow",
         "settings"
       ],
       "key": "ui.toolbar.items",
@@ -2293,6 +2222,104 @@
       "default": 0.85,
       "key": "stats.speed_factor",
       "type": "float"
+    },
+    {
+      "default": true,
+      "key": "moodflow.enabled",
+      "type": "bool"
+    },
+    {
+      "default": [
+        "*bank*",
+        "*pay*",
+        "KeePass*.exe",
+        "1Password*.exe",
+        "Bitwarden*.exe",
+        "mstsc.exe"
+      ],
+      "key": "moodflow.app_blocklist",
+      "type": "strlist"
+    },
+    {
+      "default": [],
+      "key": "moodflow.app_allowlist",
+      "type": "strlist"
+    },
+    {
+      "default": "ctrl+alt+p",
+      "key": "moodflow.pause_hotkey",
+      "type": "str"
+    },
+    {
+      "default": "ctrl+alt+r",
+      "key": "moodflow.rewrite_hotkey",
+      "type": "str"
+    },
+    {
+      "default": "gentle",
+      "key": "moodflow.rewrite_style",
+      "type": "enum",
+      "values": [
+        "gentle",
+        "polite",
+        "concise",
+        "structured"
+      ]
+    },
+    {
+      "default": true,
+      "key": "moodflow.rewrite_clipboard",
+      "type": "bool"
+    },
+    {
+      "default": [],
+      "key": "moodflow.rewrite_insert_apps",
+      "type": "strlist"
+    },
+    {
+      "default": false,
+      "key": "moodflow.remember_pause",
+      "type": "bool"
+    },
+    {
+      "default": false,
+      "key": "clipboard.enabled",
+      "type": "bool"
+    },
+    {
+      "default": 200,
+      "key": "clipboard.max_entries",
+      "type": "int"
+    },
+    {
+      "default": 30,
+      "key": "clipboard.retention_days",
+      "type": "int"
+    },
+    {
+      "default": [],
+      "key": "plugins.enabled",
+      "type": "strlist"
+    },
+    {
+      "default": false,
+      "key": "plugins.safe_mode",
+      "type": "bool"
+    },
+    {
+      "default": false,
+      "key": "chord.enabled",
+      "type": "bool"
+    },
+    {
+      "default": "chord_keymap.json",
+      "key": "chord.keymap",
+      "type": "str"
+    },
+    {
+      "default": true,
+      "key": "moodflow.hub_autostart",
+      "type": "bool"
     },
     {
       "default": "info",

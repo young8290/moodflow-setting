@@ -67,29 +67,7 @@ impl Channel {
         }
     }
 
-    /// 该通道的元数据地址，**按优先级排列**：靠前的先试，取不到或内容不可解析就退到下一个。
-    /// 两个变体各看各的文件，互不干扰。
-    ///
-    /// **平台也各看各的**：Windows 的 `latest.json` 描述 `Setup.exe`，macOS 的
-    /// `latest-mac.json` 描述 `.pkg`，Linux 的 `latest-linux.json` 按架构描述两个 `.deb`。
-    /// 合不成一个文件 —— 版本号、大小、sha256 都是每平台一份，而在野的老 Windows 客户端
-    /// 只认顶层的那一组字段，改不动。
-    ///
-    /// # 为什么要多源
-    ///
-    /// `dl.windinput.com` 与 `windinput.com` 挂在不同的加速配置和节点上。已经观察到
-    /// 部分国内网络对前者 TLS 握手失败（`schannel: failed to receive handshake`）而
-    /// 后者正常。根因在链路不在服务端，客户端改不了，但多备一条路是能做的。
-    ///
-    /// # 为什么 dev 通道只有一个源
-    ///
-    /// 文档站的元数据由 `sync_release_notes.py` 从 **GitHub Release** 组装，而 dev 版
-    /// 走的是另一条发布链路（主仓 `dev.ps1` 直推 R2），压根不进 GitHub Release ——
-    /// 文档站没有也不该有那两个文件。
-    ///
-    /// 这里不能凭"多一个源总没坏处"随手补上：文档站对未匹配路径**返回 200 加首页
-    /// HTML**（静态托管的 SPA 回落）而不是 404，列进去只会让 dev 用户白等一次超时，
-    /// 再拿一坨 47KB 的 HTML 去解析。
+    /// Moodflow 自有 GitHub Release 中的版本元数据；不访问原项目或未部署的域名。
     pub fn metadata_urls(self) -> &'static [&'static str] {
         self.metadata_urls_for(Platform::current())
     }
@@ -106,21 +84,24 @@ impl Channel {
     /// [`metadata_urls`]: Self::metadata_urls
     fn metadata_urls_for(self, platform: Platform) -> &'static [&'static str] {
         match (self, platform) {
-            (Self::Stable, Platform::Windows) => &[
-                "https://windinput.com/latest.json",
-                "https://dl.windinput.com/latest.json",
-            ],
-            (Self::Dev, Platform::Windows) => &["https://dl.windinput.com/latest-dev.json"],
-            (Self::Stable, Platform::Mac) => &[
-                "https://windinput.com/latest-mac.json",
-                "https://dl.windinput.com/latest-mac.json",
-            ],
-            (Self::Dev, Platform::Mac) => &["https://dl.windinput.com/latest-mac-dev.json"],
+            (Self::Stable, Platform::Windows) => {
+                &["https://github.com/young8290/Moodflow/releases/latest/download/latest.json"]
+            }
+            (Self::Dev, Platform::Windows) => {
+                &["https://github.com/young8290/Moodflow/releases/download/dev/latest-dev.json"]
+            }
+            (Self::Stable, Platform::Mac) => {
+                &["https://github.com/young8290/Moodflow/releases/latest/download/latest-mac.json"]
+            }
+            (Self::Dev, Platform::Mac) => {
+                &["https://github.com/young8290/Moodflow/releases/download/dev/latest-mac-dev.json"]
+            }
             (Self::Stable, Platform::Linux) => &[
-                "https://windinput.com/latest-linux.json",
-                "https://dl.windinput.com/latest-linux.json",
+                "https://github.com/young8290/Moodflow/releases/latest/download/latest-linux.json",
             ],
-            (Self::Dev, Platform::Linux) => &["https://dl.windinput.com/latest-linux-dev.json"],
+            (Self::Dev, Platform::Linux) => &[
+                "https://github.com/young8290/Moodflow/releases/download/dev/latest-linux-dev.json",
+            ],
         }
     }
 }
@@ -364,12 +345,12 @@ pub fn should_auto_check(
 /// **不绕过 `network_consent`** —— 未经用户明示同意联网是产品底线，不设调试后门；
 /// 开发机上在对话框里点一次同意即可持久化。
 ///
-/// 触发方式（任一）：`--force-update-check` 参数，或 `WIND_UPDATE_FORCE=1` 环境变量。
+/// 触发方式（任一）：`--force-update-check` 参数，或 `MOODFLOW_UPDATE_FORCE=1` 环境变量。
 pub fn force_check_requested(argv: &[String]) -> bool {
     if argv.iter().any(|a| a == "--force-update-check") {
         return true;
     }
-    std::env::var("WIND_UPDATE_FORCE").is_ok_and(|v| v == "1")
+    std::env::var("MOODFLOW_UPDATE_FORCE").is_ok_and(|v| v == "1")
 }
 
 /// 检查更新：拉元数据 → 判定版本 → 按需拉发布说明。
@@ -425,10 +406,13 @@ mod tests {
             version: version.to_string(),
             tag: format!("v{version}"),
             channel: "stable".to_string(),
-            download_url: "https://dl.windinput.com/WindInput-Setup.exe".to_string(),
+            download_url:
+                "https://github.com/young8290/Moodflow/releases/download/test/Moodflow-Setup.exe"
+                    .to_string(),
             sha256: "a".repeat(64),
             size: 48_234_496,
-            release_notes_url: "https://dl.windinput.com/notes.md".to_string(),
+            release_notes_url:
+                "https://github.com/young8290/Moodflow/releases/download/test/notes.md".to_string(),
             published_at: String::new(),
             min_upgradable_from: String::new(),
         }

@@ -8,7 +8,7 @@
 #   设置项标题带进了表里没有的字（改文案、加功能都会），跑一次即可，**不需要人工查读音**。
 #
 # 数据来源:
-#   ../WindInput/build/data/pinyin_map.txt —— core 的构建产物（44 439 行，源自
+#   ../Moodflow/build/data/pinyin_map.txt —— core 的构建产物（44 439 行，源自
 #   pinyin-data，经 kMandarin/kTGHZ2013/kXHC1983 白名单裁过古音，多音字按常用频率排序）。
 #   用它而不是另找一份表，是为了让设置页的拼音检索与这套输入法自己的读音一致。
 #   它不随本仓发布，故只在生成时读一次，运行时零依赖。
@@ -28,13 +28,14 @@ $out = Join-Path $repo 'src/assets/pinyin_initials.txt'
 
 # ── 1. 找拼音真相源 ──
 $candidates = @(
-    (Join-Path $repo '../WindInput/build/data/pinyin_map.txt'),
-    (Join-Path $repo '../WindInput/build_dev/data/pinyin_map.txt'),
-    (Join-Path $repo '../WindInput/.cache/pinyin-data/pinyin.txt')
+    $env:MOODFLOW_PINYIN_MAP,
+    (Join-Path $repo '../Moodflow/build/data/pinyin_map.txt'),
+    (Join-Path $repo '../Moodflow/build_dev/data/pinyin_map.txt'),
+    (Join-Path $repo '../Moodflow/.cache/pinyin-data/pinyin.txt')
 )
-$mapPath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+$mapPath = $candidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 if (-not $mapPath) {
-    throw "找不到拼音表。它是 core 的构建产物，请先在 WindInput 侧构建一次。找过：`n  " + ($candidates -join "`n  ")
+    throw "找不到拼音表。它是 core 的构建产物，请先在 Moodflow 侧构建一次。找过：`n  " + ($candidates -join "`n  ")
 }
 Write-Host "拼音来源: $mapPath"
 

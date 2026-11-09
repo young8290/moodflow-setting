@@ -267,6 +267,10 @@ pub struct DictManagerState {
     pub view_position: Signal<String>,
     /// 当前查看的系统短语原值 `(code, text, weight, position)`，供「转为用户短语」原样复制。
     /// 存原值而不是从 `view_*` 信号回 parse——那几个是给人看的字符串，parse 失败就得静默兜底。
+    #[allow(
+        clippy::type_complexity,
+        reason = "Original typed phrase values survive editing without reparsing UI text"
+    )]
     viewing: Rc<RefCell<Option<(String, String, i64, i64)>>>,
 
     // ── 候选调整手动添加/编辑对话框 ──
@@ -657,11 +661,12 @@ impl DictManagerState {
             if s.kind == "pinyin" {
                 if pinyin_seen {
                     // 已有拼音域：只在当前代表是双拼且新方案非双拼时，才升级代表
-                    if pinyin_rep_is_shuangpin && s.scheme != "shuangpin" {
-                        if let Some(py) = out.iter_mut().find(|d| d.kind == "pinyin") {
-                            py.rep_schema_id = s.id.clone();
-                            pinyin_rep_is_shuangpin = false; // 代表已升级为非双拼
-                        }
+                    if pinyin_rep_is_shuangpin
+                        && s.scheme != "shuangpin"
+                        && let Some(py) = out.iter_mut().find(|d| d.kind == "pinyin")
+                    {
+                        py.rep_schema_id = s.id.clone();
+                        pinyin_rep_is_shuangpin = false; // 代表已升级为非双拼
                     }
                     continue;
                 }
@@ -1251,6 +1256,8 @@ impl DictManagerState {
             Err(e) => {
                 self.rows.borrow_mut().clear();
                 self.total.set(0);
+                *self.offset.borrow_mut() = 0;
+                self.sync_page_input();
                 self.notify_err(&format!("加载失败: {e}"));
                 self.rebuild_list();
             }
@@ -2723,7 +2730,7 @@ impl DictManagerState {
     /// 或反过来「设置页拦住了一个其实能用的字」。core 拒绝时的报错文案本身可读，由
     /// `run_calls` 原样显示。
     ///
-    /// 这份克制在 WindInput issue #83 得到了回报：core 把准入从「只认汉字」放开到「除空白
+    /// 这份克制在 Moodflow issue #83 得到了回报：core 把准入从「只认汉字」放开到「除空白
     /// 与控制字符外全放行」，本仓一行代码都不用改就跟着放开了。
     #[allow(clippy::type_complexity)]
     fn common_save_calls(
@@ -4153,6 +4160,10 @@ impl DictManagerState {
     /// 候选调整保存调用序列（纯函数，便于单测）。
     /// 新增/键不变编辑：单 addRule（同 code+word upsert 覆盖）；
     /// 编辑改了 code/word：先加新再删旧（加失败则旧规则完好，避免删成功/加失败丢规则）。
+    #[allow(
+        clippy::type_complexity,
+        reason = "Ordered RPC operations and a success label are one save transaction"
+    )]
     pub fn shadow_save_calls(&self) -> Result<(Vec<(&'static str, Value)>, &'static str), String> {
         let (m, p) = self.shadow_add_call()?;
         let orig = self.shadow_orig.borrow().clone();
@@ -5022,7 +5033,7 @@ mod tests {
     ///
     /// core 里 date 与 month_day 的变量完全一样（17 条），不合并就要把同样的十七行出两遍。
     ///
-    /// 直接注入缓存而不是走 mock：mock 要靠进程级环境变量 `WIND_RPC_MOCK`，测试并发跑时
+    /// 直接注入缓存而不是走 mock：mock 要靠进程级环境变量 `MOODFLOW_RPC_MOCK`，测试并发跑时
     /// 互相干扰；而注入还能造出「两类变量集相同」这个真实场景（mock 数据里没有）。
     #[test]
     fn quick_var_lines_merge_kinds_sharing_one_var_set() {
@@ -5612,7 +5623,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let st = DictManagerState::new();
         with_schemas(
             &st,
@@ -5666,7 +5677,7 @@ mod tests {
                 seen.insert(format!("{:?}", spec.category));
             }
         }
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         for c in [
             "PhraseUser",
             "UserDict",
@@ -5685,6 +5696,9 @@ mod tests {
     /// widget 的话，第 2 页会停在第 1 页滚到的那个位置。所有分页类别共用 `goto_page`。
     #[test]
     fn page_change_rebuilds_table_to_reset_scroll() {
+        let _guard = crate::rpc::ENV_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let st = DictManagerState::new();
         with_schemas(&st, vec![schema("wb", "五笔", "codetable")]);
         st.domain.set(GLOBAL_DOMAINS);
@@ -5704,7 +5718,8 @@ mod tests {
                 st.current_category()
             );
             let before = st.table_epoch.get()[0];
-            st.goto_page(2);
+            // Reload may clamp the page if the offline fixture has fewer rows.
+            st.goto_page(st.current_page());
             assert_eq!(st.table_epoch.get()[0], before, "页没变不重建");
         }
     }
@@ -5835,10 +5850,10 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         crate::rpc::take_mock_calls();
         let r = f();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         r
     }
 
@@ -6162,7 +6177,10 @@ mod tests {
         assert_eq!(sec["key"], json!("userWords"), "非数值字段取首批");
 
         // 单批原样返回（绝大多数情况，19 万词也只有一批）
-        assert_eq!(DictManagerState::merge_import_reports(&[b1.clone()]), b1);
+        assert_eq!(
+            DictManagerState::merge_import_reports(std::slice::from_ref(&b1)),
+            b1
+        );
 
         // toast 用合并后的数，不是最后一批的数
         let msg = DictManagerState::format_import_result(&m);
@@ -6489,7 +6507,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let st = DictManagerState::new();
         // mock 出码对 BMP 外字符回空串（模拟方案未配拆字）。
         let words = vec![
@@ -6503,7 +6521,7 @@ mod tests {
         assert_eq!(rows[0].1, "中国");
         assert_eq!(rows[1].1, "计算机");
         assert!(rows.iter().all(|(c, _)| !c.is_empty()));
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 出码结果条数与送出的词数不符 = core 契约违例。宁可整体失败也不按下标硬配：
@@ -6642,7 +6660,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let st = DictManagerState::new();
         with_schemas(&st, vec![schema("wb", "五笔86", "codetable")]);
         st.domain.set(GLOBAL_DOMAINS);
@@ -6651,7 +6669,7 @@ mod tests {
         st.sub_tab.set(1);
         st.on_nav_changed();
         assert_eq!(st.search.get(), "程序", "切子标签不应清空搜索词");
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
     }
 
     /// 搜索词跨导航保留后，空表必须说清是"没数据"还是"没匹配"。

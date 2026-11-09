@@ -330,7 +330,7 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    /// WIND_RPC_MOCK 是进程全局变量，锁必须与其他模块共用一把（见 rpc.rs 的说明）。
+    /// MOODFLOW_RPC_MOCK 是进程全局变量，锁必须与其他模块共用一把（见 rpc.rs 的说明）。
     use crate::rpc::ENV_LOCK;
 
     /// 确认框要说得出包里装的是什么 —— 它是用户决定装不装的**唯一**依据。
@@ -380,14 +380,14 @@ mod tests {
         let _guard = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let text = ThemeSource::Text("[meta]\nname = \"MOCK_EXISTING\"\n".to_string());
         let pkg = ThemeSource::Package(r"C:\down\MOCK_EXISTING.wtheme".to_string());
         let (t_first, t_forced) = (text.import(false), text.import(true));
         let (p_first, p_forced) = (pkg.import(false), pkg.import(true));
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert!(
             matches!(t_first, Err(ThemeImportError::Conflict(_))),
             "文本来源撞名该归为 Conflict"
@@ -408,15 +408,15 @@ mod tests {
 
     #[test]
     fn validate_https_url_accepts_https_only() {
-        assert!(validate_https_url("https://theme.windinput.com/a.toml").is_ok());
-        assert!(validate_https_url("http://theme.windinput.com/a.toml").is_err());
+        assert!(validate_https_url("https://example.invalid/a.toml").is_ok());
+        assert!(validate_https_url("http://example.invalid/a.toml").is_err());
         assert!(validate_https_url("file:///C:/a.toml").is_err());
     }
 
     #[test]
     fn download_https_text_rejects_non_https_before_request() {
         assert!(matches!(
-            download_https_text("http://theme.windinput.com/a.toml"),
+            download_https_text("http://example.invalid/a.toml"),
             Err(ThemeImportError::InvalidUrl(_))
         ));
     }
@@ -434,7 +434,7 @@ mod tests {
             "slug": "blue",
             "display_name": "清风·蓝",
             "version": "1.0",
-            "author": "WindInput"
+            "author": "Moodflow"
         }))
         .unwrap();
         assert_eq!(p.slug, "blue");
@@ -487,15 +487,15 @@ mod tests {
     fn preview_text_uses_core_preview_rpc() {
         // into_inner: 别的测试 panic 毒化了锁时仍继续，避免一处失败连锁放大
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let preview = preview_text("[meta]\nname = \"测试主题\"\n").unwrap();
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert_eq!(preview.slug, "test-theme");
         assert_eq!(preview.display_name, "测试主题");
         assert_eq!(preview.version, "1.0.0");
-        assert_eq!(preview.author, "WindInput");
+        assert_eq!(preview.author, "Moodflow");
     }
 
     /// 同名冲突：core 走 **result 字段**（`conflict: true`）回报，本层必须认出它并转成
@@ -505,14 +505,14 @@ mod tests {
     fn import_text_maps_conflict_result_to_conflict_error() {
         // into_inner: 别的测试 panic 毒化了锁时仍继续，避免一处失败连锁放大
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let text = "[meta]\nname = \"MOCK_EXISTING\"\n";
         let conflict = import_text(text, false, None);
         // 同一份原文 + force=true ⇒ 覆盖成功（覆盖确认框点「覆盖」走的就是这条）。
         let forced = import_text(text, true, None);
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         let err = conflict.expect_err("撞名时不该返回成功");
         assert!(
             matches!(err, ThemeImportError::Conflict(_)),
@@ -553,13 +553,13 @@ mod tests {
     #[test]
     fn export_falls_back_to_the_effective_theme_when_nothing_selected() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
         let (none, empty) = (
             theme_id_for_export(None),
             theme_id_for_export(Some(String::new())),
         );
         let effective = current_theme_id();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
 
         let effective = effective.expect("mock 下生效值必须取得到");
         assert_eq!(none.unwrap(), effective);
@@ -574,12 +574,12 @@ mod tests {
     #[test]
     fn current_theme_id_reads_the_whole_config_not_a_value_field() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let got = current_theme_id();
         // mock 回执里没有 `value` 字段：照错法写必然拿到空串 → Err，这条会红。
         let raw = crate::rpc::call_core("config.get", &json!({})).unwrap();
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
 
         assert!(
             raw.get("value").is_none(),
@@ -598,11 +598,11 @@ mod tests {
     fn import_text_uses_core_import_rpc() {
         // into_inner: 别的测试 panic 毒化了锁时仍继续，避免一处失败连锁放大
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let imported = import_text("[meta]\nname = \"测试主题\"\n", false, None).unwrap();
 
-        unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+        unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
         assert_eq!(imported.slug, "test-theme");
         assert_eq!(imported.display_name, "测试主题");
     }

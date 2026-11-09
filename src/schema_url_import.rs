@@ -1,4 +1,4 @@
-//! 协议 `windinput://import/schema` 的方案包下载：仅官方域名（每一跳）+ 限额下载到私有临时文件。
+//! 协议 `moodflow://import/schema` 的方案包下载：仅官方域名（每一跳）+ 限额下载到私有临时文件。
 //!
 //! 下载机制照抄 `theme_import`（ureq 同步请求，超时 + 体积上限），但方案包是
 //! 二进制 zip，限额放宽到 64 MB / 30s。下载成功后由 main 的协议路由转交
@@ -18,41 +18,48 @@ const DOWNLOAD_TIMEOUT_SECS: u64 = 30;
 /// 最多跟随的重定向跳数（与原先交给 ureq 时的 `.redirects(3)` 同额）。
 const MAX_REDIRECTS: usize = 3;
 /// 下载落盘文件名前缀；清理陈旧残留只认这个前缀。
-const FILE_PREFIX: &str = "windinput_schema_import-";
+const FILE_PREFIX: &str = "moodflow_schema_import-";
 /// 早于这个时长的残留（进程在确认框开着时被杀）下次下载时顺手删掉。
 const STALE_SECS: u64 = 24 * 60 * 60;
 
-/// 官方域判定：`windinput.com` 本域或其任意子域（大小写不敏感）。
-///
-/// 子域必须以 `.windinput.com` **带点后缀**锚定 —— 只比 `ends_with("windinput.com")`
-/// 会放过 `evil-windinput.com` 这类蹭名域。端口不在这里处理：调用方先从 URL
-/// 解析出纯 host 再来问。
+/// 第一跳只接受 Moodflow 仓库；GitHub 的发布资产跳转单独校验。
 pub fn is_official_host(host: &str) -> bool {
-    let host = host.to_ascii_lowercase();
-    host == "windinput.com" || host.ends_with(".windinput.com")
+    host.eq_ignore_ascii_case("github.com")
+        || host.eq_ignore_ascii_case("raw.githubusercontent.com")
 }
 
-/// 从 https URL 中提取 host（小写，去端口、去 userinfo）。非 https 或无 host 返回 None。
-///
-/// 手写解析（本仓无 url crate）：authority = `https://` 与首个 `/?#` 之间；
-/// 再剥掉 `user@` 前缀与 `:port` 后缀。IPv6 字面量带 `[]`，官方域用不到，直接判非法。
-pub fn https_host_of(url: &str) -> Option<String> {
-    let t = url.trim();
-    // `get(..8)`：位置 8 落在多字节字符中间时返回 None 而不是 panic——URL 来自
-    // 协议链接，是攻击者可控输入，绝不能因畸形串崩掉设置程序。
-    let rest = t
-        .get(..8)
-        .filter(|p| p.eq_ignore_ascii_case("https://"))
-        .map(|_| &t[8..])
-        .filter(|r| !r.is_empty())?;
-    let authority = rest.split(['/', '?', '#']).next()?;
-    // userinfo：@ 之后才是 host（`https://user@evil.com/` 不能把 user 当 host）。
-    let host_port = authority.rsplit('@').next()?;
-    if host_port.starts_with('[') {
+pub fn https_host_of(value: &str) -> Option<String> {
+    let url = url::Url::parse(value).ok()?;
+    if url.scheme() != "https"
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.port().is_some()
+        || url.fragment().is_some()
+    {
         return None;
     }
-    let host = host_port.split(':').next()?;
-    (!host.is_empty()).then(|| host.to_ascii_lowercase())
+    url.host_str().map(str::to_ascii_lowercase)
+}
+
+fn repo_url(value: &str) -> bool {
+    let Some(host) = https_host_of(value) else {
+        return false;
+    };
+    if !is_official_host(&host) {
+        return false;
+    }
+    let Ok(url) = url::Url::parse(value) else {
+        return false;
+    };
+    let path = url.path();
+    path.starts_with("/young8290/Moodflow/") && !path.contains('%') && !path.contains('\\')
+}
+
+fn asset_url(value: &str) -> bool {
+    matches!(
+        https_host_of(value).as_deref(),
+        Some("release-assets.githubusercontent.com" | "objects.githubusercontent.com")
+    )
 }
 
 /// 一次 HTTP 往返的结果：重定向交回调用方逐跳校验，正文已按上限读完。
@@ -63,9 +70,8 @@ pub(crate) enum Fetched {
 
 /// 第一跳的校验：https + 官方域。
 fn check_official_url(url: &str) -> Result<(), String> {
-    let host = https_host_of(url).ok_or_else(|| "方案包链接必须是 https://".to_string())?;
-    if !is_official_host(&host) {
-        return Err("方案包链接必须来自 windinput.com 官方域名".to_string());
+    if !repo_url(url) {
+        return Err("方案包链接必须是 Moodflow 自有 GitHub 仓库的 HTTPS 地址".into());
     }
     Ok(())
 }
@@ -102,9 +108,9 @@ pub(crate) fn fetch_official(
             Fetched::Body(bytes) => return Ok(bytes),
             Fetched::Redirect(location) => {
                 let next = resolve_location(&current, &location)
-                    .filter(|u| check_official_url(u).is_ok())
+                    .filter(|u| repo_url(u) || asset_url(u))
                     .ok_or_else(|| {
-                        format!("方案包链接重定向到了非官方或非 https 地址，已拒绝：{location}")
+                        "方案包链接重定向到了非官方或非 HTTPS 地址，已拒绝".to_string()
                     })?;
                 current = next;
             }
@@ -157,7 +163,7 @@ impl Drop for DownloadedPackage {
 
 /// 下载落盘的目录。
 ///
-/// Linux：`$XDG_CACHE_HOME/WindInput/import`（0700）。`/tmp` 多用户共享，固定文件名会被
+/// Linux：`$XDG_CACHE_HOME/Moodflow/import`（0700）。`/tmp` 多用户共享，固定文件名会被
 /// 别的用户先占住（确定性拒绝服务），没开 `fs.protected_regular` 时还能在确认前换包。
 /// Windows / macOS：系统临时目录本就是每用户私有（`%LOCALAPPDATA%\Temp`、`$TMPDIR`），
 /// 沿用；随机文件名与用后即删照样适用。
@@ -167,7 +173,7 @@ fn download_dir() -> Result<PathBuf, String> {
         use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
         let dir = dirs::cache_dir()
             .ok_or_else(|| "无法确定用户缓存目录（HOME 未设置）".to_string())?
-            .join("WindInput")
+            .join("Moodflow")
             .join("import");
         std::fs::DirBuilder::new()
             .recursive(true)
@@ -256,56 +262,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn official_host_accepts_bare_and_subdomains_case_insensitive() {
-        assert!(is_official_host("windinput.com"));
-        assert!(is_official_host("WindInput.COM"));
-        assert!(is_official_host("dl.windinput.com"));
-        assert!(is_official_host("a.b.WINDINPUT.com"));
-    }
-
-    /// 蹭名域必须被点后缀锚定拦下——这是白名单存在的意义。
-    #[test]
-    fn official_host_rejects_lookalike_and_foreign_domains() {
-        assert!(!is_official_host("evil-windinput.com"));
-        assert!(!is_official_host("windinput.com.evil.com"));
-        assert!(!is_official_host("windinput.org"));
-        assert!(!is_official_host("example.com"));
-        assert!(!is_official_host(""));
-    }
-
-    #[test]
-    fn host_extraction_strips_port_userinfo_and_path() {
-        assert_eq!(
-            https_host_of("https://dl.windinput.com/pkg.zip").as_deref(),
-            Some("dl.windinput.com")
-        );
-        assert_eq!(
-            https_host_of("https://Windinput.Com:8443/a?b=c#d").as_deref(),
-            Some("windinput.com"),
-            "端口不参与域判定，host 归一为小写"
-        );
-        // userinfo 伪装：host 必须取 @ 之后的部分。
-        assert_eq!(
-            https_host_of("https://windinput.com@evil.com/pkg.zip").as_deref(),
-            Some("evil.com")
-        );
-        assert_eq!(https_host_of("http://windinput.com/a.zip"), None);
-        assert_eq!(https_host_of("https:///no-host"), None);
-        assert_eq!(https_host_of("https://[::1]/x"), None);
-    }
-
-    /// 畸形串不 panic：多字节字符跨越第 8 字节（`https:/汉` 的「汉」占字节 7..10）
-    /// 时按字节切片会崩——URL 是协议链接来的攻击者可控输入。
-    #[test]
-    fn host_extraction_survives_multibyte_garbage() {
-        assert_eq!(https_host_of("https:/汉字"), None);
-        assert_eq!(https_host_of("汉https://x"), None);
-        assert_eq!(https_host_of("https://"), None);
-        // IDN 子域本身合法解析（是否官方域由 is_official_host 另判）。
-        assert_eq!(
-            https_host_of("https://例子.windinput.com/x").as_deref(),
-            Some("例子.windinput.com")
-        );
+    fn official_urls_are_scoped_to_our_repository() {
+        assert!(repo_url(
+            "https://github.com/young8290/Moodflow/releases/download/v1/a.wpkg"
+        ));
+        assert!(repo_url(
+            "https://raw.githubusercontent.com/young8290/Moodflow/main/a.wpkg"
+        ));
+        for url in [
+            "https://github.com/other/Moodflow/a.wpkg",
+            "https://github.com/young8290/Moodflow.evil/a.wpkg",
+            "https://github.com/young8290/Moodflow/../other/a.wpkg",
+            "https://github.com/young8290/Moodflow/%2Fother",
+            "https://user@github.com/young8290/Moodflow/a.wpkg",
+            "https://github.com:8443/young8290/Moodflow/a.wpkg",
+            "https://github.com.evil/young8290/Moodflow/a.wpkg",
+            "http://github.com/young8290/Moodflow/a.wpkg",
+            "https://release-assets.githubusercontent.com/a.wpkg",
+            "https:/汉字",
+            "汉https://x",
+            "https://",
+        ] {
+            assert!(!repo_url(url), "{url}");
+        }
     }
 
     /// 假往返：按地址查表应答，记下实际请求过的地址。
@@ -327,24 +306,33 @@ mod tests {
     #[test]
     fn fetch_follows_official_redirects() {
         let seen = Default::default();
-        let table = [("https://windinput.com/a.zip", Ok("PK"))];
-        let body = fetch_official("https://windinput.com/a.zip", scripted(&table, &seen));
+        let table = [("https://github.com/young8290/Moodflow/a.zip", Ok("PK"))];
+        let body = fetch_official(
+            "https://github.com/young8290/Moodflow/a.zip",
+            scripted(&table, &seen),
+        );
         assert_eq!(body.unwrap(), b"PK");
 
         let seen = Default::default();
         let table = [
-            ("https://windinput.com/s/a", Err("/files/a.zip")),
             (
-                "https://windinput.com/files/a.zip",
-                Err("//dl.windinput.com/a.zip"),
+                "https://github.com/young8290/Moodflow/s/a",
+                Err("/young8290/Moodflow/files/a.zip"),
             ),
             (
-                "https://dl.windinput.com/a.zip",
-                Err("HTTPS://CDN.windinput.com/a.zip"),
+                "https://github.com/young8290/Moodflow/files/a.zip",
+                Err("https://release-assets.githubusercontent.com/a.zip?token=test"),
             ),
-            ("HTTPS://CDN.windinput.com/a.zip", Ok("PK")),
+            (
+                "https://release-assets.githubusercontent.com/a.zip?token=test",
+                Err("https://objects.githubusercontent.com/a.zip"),
+            ),
+            ("https://objects.githubusercontent.com/a.zip", Ok("PK")),
         ];
-        let body = fetch_official("https://windinput.com/s/a", scripted(&table, &seen));
+        let body = fetch_official(
+            "https://github.com/young8290/Moodflow/s/a",
+            scripted(&table, &seen),
+        );
         assert_eq!(body.unwrap(), b"PK");
         assert_eq!(seen.borrow().len(), 4);
     }
@@ -355,17 +343,20 @@ mod tests {
     fn fetch_rejects_foreign_or_downgraded_redirects() {
         for bad in [
             "https://evil.com/a.zip",
-            "https://evil-windinput.com/a.zip",
-            "http://windinput.com/a.zip",
+            "https://evil-moodflow.com/a.zip",
+            "http://moodflow.com/a.zip",
             "//evil.com/a.zip",
-            "https://windinput.com@evil.com/a.zip",
-            "ftp://windinput.com/a.zip",
+            "https://github.com/young8290/Moodflow@evil.com/a.zip",
+            "ftp://moodflow.com/a.zip",
             "a.zip",
         ] {
             let seen = std::cell::RefCell::new(Vec::new());
-            let table = [("https://windinput.com/a", Err(bad))];
-            let err =
-                fetch_official("https://windinput.com/a", scripted(&table, &seen)).unwrap_err();
+            let table = [("https://github.com/young8290/Moodflow/a", Err(bad))];
+            let err = fetch_official(
+                "https://github.com/young8290/Moodflow/a",
+                scripted(&table, &seen),
+            )
+            .unwrap_err();
             assert!(err.contains("已拒绝"), "{bad}: {err}");
             assert_eq!(seen.borrow().len(), 1, "{bad}: 不得请求重定向目标");
         }
@@ -374,9 +365,15 @@ mod tests {
     #[test]
     fn fetch_gives_up_after_max_redirects() {
         let seen = Default::default();
-        let table = [("https://windinput.com/loop", Err("/loop"))];
-        let err =
-            fetch_official("https://windinput.com/loop", scripted(&table, &seen)).unwrap_err();
+        let table = [(
+            "https://github.com/young8290/Moodflow/loop",
+            Err("/young8290/Moodflow/loop"),
+        )];
+        let err = fetch_official(
+            "https://github.com/young8290/Moodflow/loop",
+            scripted(&table, &seen),
+        )
+        .unwrap_err();
         assert!(err.contains("超过"), "{err}");
         assert_eq!(seen.borrow().len(), MAX_REDIRECTS + 1);
     }
@@ -483,9 +480,9 @@ mod tests {
     /// 白名单校验发生在任何网络请求之前——非官方域直接拒绝，不发请求。
     #[test]
     fn download_rejects_non_official_before_request() {
-        let err = download_schema_package("https://evil-windinput.com/pkg.zip").unwrap_err();
-        assert!(err.contains("官方域名"), "{err}");
-        let err = download_schema_package("http://windinput.com/pkg.zip").unwrap_err();
-        assert!(err.contains("https"), "{err}");
+        let err = download_schema_package("https://evil-moodflow.com/pkg.zip").unwrap_err();
+        assert!(err.contains("自有 GitHub"), "{err}");
+        let err = download_schema_package("http://moodflow.com/pkg.zip").unwrap_err();
+        assert!(err.contains("HTTPS"), "{err}");
     }
 }

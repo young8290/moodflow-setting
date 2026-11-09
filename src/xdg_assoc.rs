@@ -1,4 +1,4 @@
-//! Linux 上的系统关联（XDG）：`windinput://` 协议与 `.wpkg` / `.wtheme` 包文件。
+//! Linux 上的系统关联（XDG）：`moodflow://` 协议与 `.wpkg` / `.wtheme` 包文件。
 //!
 //! 与 Windows 的注册表关联（[`crate::protocol`] / [`crate::file_assoc`]）同一套语义：
 //! 三态归属（[`Registration`]）、便携版与「用户取消过」两道自愈门、指向已消失程序的残留
@@ -37,22 +37,22 @@ pub struct Target {
     pub desktop: &'static str,
 }
 
-const SETTING_DESKTOP: &str = "windinput-setting.desktop";
-const IMPORT_DESKTOP: &str = "windinput-import.desktop";
+const SETTING_DESKTOP: &str = "moodflow-setting.desktop";
+const IMPORT_DESKTOP: &str = "moodflow-import.desktop";
 
-/// `windinput://` 协议（浏览器里的一键导入链接）。
+/// `moodflow://` 协议（浏览器里的一键导入链接）。
 pub const PROTOCOL: Target = Target {
-    mime: "x-scheme-handler/windinput",
+    mime: "x-scheme-handler/moodflow",
     desktop: SETTING_DESKTOP,
 };
 /// 方案包 `.wpkg`。
 pub const PACKAGE: Target = Target {
-    mime: "application/x-windinput-package",
+    mime: "application/x-moodflow-package",
     desktop: IMPORT_DESKTOP,
 };
 /// 主题包 `.wtheme`。
 pub const THEME: Target = Target {
-    mime: "application/x-windinput-theme",
+    mime: "application/x-moodflow-theme",
     desktop: IMPORT_DESKTOP,
 };
 /// 本程序登记的全部关联。
@@ -69,18 +69,17 @@ pub fn target_for_ext(ext: &str) -> Target {
 }
 
 const SETTING_TEMPLATE: &str =
-    include_str!("../../WindInput/scripts/linux/pkg/windinput-setting.desktop");
+    include_str!("../../Moodflow/scripts/linux/pkg/moodflow-setting.desktop");
 const IMPORT_TEMPLATE: &str =
-    include_str!("../../WindInput/scripts/linux/pkg/windinput-import.desktop");
-const MIME_XML_TEMPLATE: &str =
-    include_str!("../../WindInput/scripts/linux/pkg/windinput-mime.xml");
+    include_str!("../../Moodflow/scripts/linux/pkg/moodflow-import.desktop");
+const MIME_XML_TEMPLATE: &str = include_str!("../../Moodflow/scripts/linux/pkg/moodflow-mime.xml");
 /// 包里 `Exec=` 写死的安装路径；用户级写入时换成本程序路径。
-const PACKAGED_EXEC: &str = "/usr/lib/windinput/wind_setting";
+const PACKAGED_EXEC: &str = "/usr/lib/moodflow/wind_setting";
 /// 用户级 `.desktop` 的归属标记。取消注册只删带它的文件：同名文件可能是用户自己写的。
-const USER_MARK: &str = "X-WindInput-UserInstall=true";
+const USER_MARK: &str = "X-Moodflow-UserInstall=true";
 /// 用户级 MIME 描述的归属标记（XML 注释）。
-const MIME_XML_MARK: &str = "<!-- X-WindInput-UserInstall -->";
-const MIME_XML_NAME: &str = "windinput.xml";
+const MIME_XML_MARK: &str = "<!-- X-Moodflow-UserInstall -->";
+const MIME_XML_NAME: &str = "moodflow.xml";
 
 fn template_of(desktop: &str) -> &'static str {
     if desktop == SETTING_DESKTOP {
@@ -214,7 +213,7 @@ fn real_ctx() -> Result<Ctx<'static>, String> {
 /// 去掉 `/proc/self/exe` 在程序文件被替换后带的 ` (deleted)` 后缀。
 ///
 /// dpkg 升级是「解出新文件再 rename 覆盖」，还开着的旧进程 `current_exe()` 读到的是
-/// `/usr/lib/windinput/wind_setting (deleted)`：拿它判「是不是指向本程序」必然不等，
+/// `/usr/lib/moodflow/wind_setting (deleted)`：拿它判「是不是指向本程序」必然不等，
 /// 自愈还会把这个不存在的路径写进用户级 `.desktop`。同一路径上的新文件就是升级后的
 /// 本程序，按它算。真有个文件就叫 `… (deleted)` 时（存在）原样保留。
 fn live_exe_path(exe: PathBuf) -> PathBuf {
@@ -355,7 +354,7 @@ fn quote_exec_arg(path: &str) -> Result<String, String> {
 /// 去掉模板头上讲系统安装的注释，补上归属标记。
 fn render_desktop(template: &str, exe: &Path, mimes: &[&str]) -> Result<String, String> {
     let mut out = String::from(
-        "# 由清风输入法设置程序为当前用户写入（高级 → 系统集成）；在那里取消注册会删除本文件。\n",
+        "# 由Moodflow 输入法设置程序为当前用户写入（高级 → 系统集成）；在那里取消注册会删除本文件。\n",
     );
     for line in template.lines() {
         if line.starts_with('#') {
@@ -529,7 +528,7 @@ impl Ctx<'_> {
     /// 默认处理者（`.desktop` 名）→ 三态，外加「是否由系统包提供」。
     ///
     /// `Other` 带的是给人看的描述：应用名 + 文件名 + 它启动的程序。最常见的「他人」其实是
-    /// 另一份清风输入法（装过 deb 又跑便携版），所以程序路径必须摆出来，用户才分得清。
+    /// 另一份Moodflow 输入法（装过 deb 又跑便携版），所以程序路径必须摆出来，用户才分得清。
     ///
     /// 默认处理者的 `.desktop` 已经不在（`mimeinfo.cache` 没跟着刷新时 xdg-mime 仍会报出这个
     /// 名字）按**未注册**算：链接点下去谁也唤不起，而报成「别人占着」会让「注册」先弹一个
@@ -721,7 +720,7 @@ impl Ctx<'_> {
         let f = self.facts(t);
         if f.system_managed {
             return Err(
-                "该关联由系统安装的 windinput 软件包提供，无法按用户解除；如需解除请卸载软件包"
+                "该关联由系统安装的 moodflow 软件包提供，无法按用户解除；如需解除请卸载软件包"
                     .to_string(),
             );
         }
@@ -765,7 +764,7 @@ impl Ctx<'_> {
     ///
     /// 与 Windows 同一原则——只收残留，不抢活着的：
     /// - 从没注册过（没有我们的用户级文件）→ 不动。deb 安装开箱即用，便携版要自己点注册；
-    /// - 我们的文件指向另一份**还在的**清风输入法 → 不动，那是用户的另一份安装；
+    /// - 我们的文件指向另一份**还在的**Moodflow 输入法 → 不动，那是用户的另一份安装；
     /// - 指向已消失的路径（便携目录搬走了、tarball 换了版本目录）→ 改指本程序；
     ///   若本程序就是系统包装的那份，直接删掉用户级文件，让系统那份生效。
     ///
@@ -983,9 +982,9 @@ mod tests {
         }
     }
 
-    const USER_SETTING: &str = "home/.local/share/applications/windinput-setting.desktop";
-    const USER_IMPORT: &str = "home/.local/share/applications/windinput-import.desktop";
-    const USER_XML: &str = "home/.local/share/mime/packages/windinput.xml";
+    const USER_SETTING: &str = "home/.local/share/applications/moodflow-setting.desktop";
+    const USER_IMPORT: &str = "home/.local/share/applications/moodflow-import.desktop";
+    const USER_XML: &str = "home/.local/share/mime/packages/moodflow.xml";
     const MIMEAPPS: &str = "home/.config/mimeapps.list";
 
     /// 模板就是包里那几份文件：它们必须还长着本模块要替换的那几行，
@@ -1017,8 +1016,8 @@ mod tests {
     #[test]
     fn exec_program_handles_quotes_and_escapes() {
         assert_eq!(
-            exec_program("/usr/lib/windinput/wind_setting %u").as_deref(),
-            Some("/usr/lib/windinput/wind_setting")
+            exec_program("/usr/lib/moodflow/wind_setting %u").as_deref(),
+            Some("/usr/lib/moodflow/wind_setting")
         );
         assert_eq!(
             exec_program(r#""/opt/My Apps/wind_setting" %f"#).as_deref(),
@@ -1079,7 +1078,7 @@ mod tests {
         .unwrap();
         assert!(text.contains("Exec=\"/p/wind_setting\" %u\n"), "{text}");
         assert!(
-            text.contains("MimeType=x-scheme-handler/windinput;\n"),
+            text.contains("MimeType=x-scheme-handler/moodflow;\n"),
             "{text}"
         );
         assert!(text.contains(USER_MARK));
@@ -1089,7 +1088,7 @@ mod tests {
         );
         let i = parse_desktop(&text);
         assert!(i.ours);
-        assert_eq!(i.name, "清风输入法设置");
+        assert_eq!(i.name, "Moodflow 输入法设置");
     }
 
     /// 只去掉「该类型 → 我们」这一项：别的类型、别人的程序、列表里的其它项、别的组都原样保留。
@@ -1097,27 +1096,27 @@ mod tests {
     fn strip_mimeapps_only_removes_our_entry() {
         let text = "[Default Applications]\n\
                     text/html=firefox.desktop\n\
-                    x-scheme-handler/windinput=windinput-setting.desktop\n\
-                    application/x-windinput-package=other.desktop;windinput-import.desktop;\n\
+                    x-scheme-handler/moodflow=moodflow-setting.desktop\n\
+                    application/x-moodflow-package=other.desktop;moodflow-import.desktop;\n\
                     \n\
                     [Added Associations]\n\
-                    x-scheme-handler/windinput=windinput-setting.desktop;\n\
+                    x-scheme-handler/moodflow=moodflow-setting.desktop;\n\
                     [Removed Associations]\n\
-                    x-scheme-handler/windinput=windinput-setting.desktop;\n";
+                    x-scheme-handler/moodflow=moodflow-setting.desktop;\n";
         let out = strip_mimeapps(text, PROTOCOL.mime, PROTOCOL.desktop).unwrap();
         assert_eq!(
             out,
             "[Default Applications]\n\
              text/html=firefox.desktop\n\
-             application/x-windinput-package=other.desktop;windinput-import.desktop;\n\
+             application/x-moodflow-package=other.desktop;moodflow-import.desktop;\n\
              \n\
              [Added Associations]\n\
              [Removed Associations]\n\
-             x-scheme-handler/windinput=windinput-setting.desktop;\n"
+             x-scheme-handler/moodflow=moodflow-setting.desktop;\n"
         );
         let out = strip_mimeapps(text, PACKAGE.mime, PACKAGE.desktop).unwrap();
         assert!(
-            out.contains("application/x-windinput-package=other.desktop;\n"),
+            out.contains("application/x-moodflow-package=other.desktop;\n"),
             "{out}"
         );
         // 没有我们的项 → None，调用方不重写文件
@@ -1132,7 +1131,7 @@ mod tests {
         // 别人的程序处理我们的类型：不是我们的项，不动
         assert!(
             strip_mimeapps(
-                "[Default Applications]\nx-scheme-handler/windinput=evil.desktop\n",
+                "[Default Applications]\nx-scheme-handler/moodflow=evil.desktop\n",
                 PROTOCOL.mime,
                 PROTOCOL.desktop
             )
@@ -1183,7 +1182,7 @@ mod tests {
         assert!(!f.removable);
         assert!(ctx.unregister(&PROTOCOL).is_err());
         assert!(
-            sb.read("usr/share/applications/windinput-setting.desktop")
+            sb.read("usr/share/applications/moodflow-setting.desktop")
                 .is_some(),
             "系统文件不许动"
         );
@@ -1200,7 +1199,7 @@ mod tests {
         let ctx = sb.ctx(&r, &exe);
         ctx.register(&PACKAGE).unwrap();
         assert!(
-            r.called("xdg-mime default windinput-import.desktop application/x-windinput-package")
+            r.called("xdg-mime default moodflow-import.desktop application/x-moodflow-package")
         );
         assert!(sb.read(USER_IMPORT).is_none());
         assert!(sb.read(USER_XML).is_none(), "系统已认得类型，不重复写");
@@ -1233,7 +1232,7 @@ mod tests {
             &sb.root.join(MIMEAPPS),
             &apps.replace(
                 "text/html=firefox.desktop\n",
-                "text/html=firefox.desktop\nx-scheme-handler/windinput=windinput-setting.desktop\n",
+                "text/html=firefox.desktop\nx-scheme-handler/moodflow=moodflow-setting.desktop\n",
             ),
         )
         .unwrap();
@@ -1307,7 +1306,7 @@ mod tests {
         let sb = Sandbox::new("foreignfile");
         let r = FakeRunner::default();
         let exe = sb.exe("wind_setting");
-        let mine = "[Desktop Entry]\nName=我自己的\nExec=/usr/bin/foo %u\nMimeType=x-scheme-handler/windinput;\n";
+        let mine = "[Desktop Entry]\nName=我自己的\nExec=/usr/bin/foo %u\nMimeType=x-scheme-handler/moodflow;\n";
         write_file(&sb.root.join(USER_SETTING), mine).unwrap();
         let ctx = sb.ctx(&r, &exe);
         assert!(ctx.register(&PROTOCOL).is_err());
@@ -1316,7 +1315,7 @@ mod tests {
     }
 
     /// 默认处理者是别的程序：Other 带应用名、文件名与程序，用户凭此判断；
-    /// 同名 `.desktop` 但指向另一份清风输入法也是 Other（那正是「另一份安装」）；
+    /// 同名 `.desktop` 但指向另一份Moodflow 输入法也是 Other（那正是「另一份安装」）；
     /// 默认处理者的文件已不在则是未注册。
     #[test]
     fn foreign_defaults_are_described() {

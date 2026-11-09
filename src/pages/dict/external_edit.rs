@@ -477,7 +477,7 @@ mod tests {
         // 没有 domain ⇒ 真探测会直接返回；这里只验证判据本身。
         assert_eq!(st.xedit.probed_idx.get(), Some(1));
         st.xedit.idx.set(1);
-        assert_eq!(st.xedit.probed_idx.get() != Some(st.xedit.idx.get()), false);
+        assert!(!(st.xedit.probed_idx.get() != Some(st.xedit.idx.get())));
         st.xedit.idx.set(2);
         assert!(st.xedit.probed_idx.get() != Some(st.xedit.idx.get()));
         st.xedit_close();

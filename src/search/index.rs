@@ -408,7 +408,7 @@ const HANDWRITTEN: &[Handwritten] = &[
     Handwritten { id: "compat:reset", anchor: "advanced:compat", page: "advanced", title: "还原应用兼容规则", section: "应用兼容性", keywords: "出厂 默认 恢复 全部还原" },
     // ── 高级 ──
     Handwritten { id: "advanced:integration", anchor: "advanced:integration", page: "advanced", title: "桌面集成", section: "桌面集成", keywords: "协议 关联 注册" },
-    Handwritten { id: "advanced:protocol", anchor: "advanced:integration", page: "advanced", title: "协议关联", section: "桌面集成", keywords: "windinput 链接 深链" },
+    Handwritten { id: "advanced:protocol", anchor: "advanced:integration", page: "advanced", title: "协议关联", section: "桌面集成", keywords: "moodflow 链接 深链" },
     Handwritten { id: "advanced:file-assoc", anchor: "advanced:integration", page: "advanced", title: "文件关联", section: "桌面集成", keywords: "wpkg 双击 打开方式" },
     Handwritten { id: "advanced:import-export", anchor: "advanced:import-export", page: "advanced", title: "导入与导出", section: "导入与导出", keywords: "配置 迁移 剪贴板" },
     Handwritten { id: "advanced:backup", anchor: "advanced:backup", page: "advanced", title: "备份与还原", section: "备份与还原", keywords: "快照 恢复 存档" },

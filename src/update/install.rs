@@ -22,7 +22,7 @@
 //!
 //! `--quiet` 装完通常停留约 2 秒自动退出，但**有两种情况它会一直等用户亲手关闭**：
 //! 安装失败，以及有旧文件被占用清不掉（完成页显示重启提示）。后者在升级 TSF 输入法
-//! 时很常见——旧 `wind_tsf.dll` 仍被各宿主进程加载着。
+//! 时很常见——旧 `moodflow_tsf.dll` 仍被各宿主进程加载着。
 //!
 //! 对本模块无影响（我们启动完就自退），但若日后要加「安装结束后重新拉起设置窗口」
 //! 之类的逻辑，不能假设安装器一定会在固定时间内消失。
@@ -303,7 +303,7 @@ mod tests {
     fn unattended_args_carry_quoted_install_dir() {
         let plan = InstallPlan {
             installer: PathBuf::from(r"C:\Temp\Setup.exe"),
-            install_dir: PathBuf::from(r"D:\Program Files\WindInput"),
+            install_dir: PathBuf::from(r"D:\Program Files\Moodflow"),
             portable: false,
         };
         let args = build_args(&plan);
@@ -311,7 +311,7 @@ mod tests {
         assert!(args.starts_with("--quiet "), "实际: {args}");
         // 路径含空格，必须带引号，否则 clap 会把它拆成两个参数
         assert!(
-            args.contains(r#""D:\Program Files\WindInput""#),
+            args.contains(r#""D:\Program Files\Moodflow""#),
             "实际: {args}"
         );
     }

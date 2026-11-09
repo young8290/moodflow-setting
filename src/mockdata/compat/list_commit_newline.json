@@ -1,7 +1,6 @@
 {
   "rules": [
     {
-      "class": "",
       "effective": {
         "process": "WINWORD.EXE",
         "style": "cr"
@@ -15,7 +14,6 @@
         }
       },
       "hasUserEntry": false,
-      "key": "winword.exe\u001f\u001f",
       "overridden": [],
       "process": "WINWORD.EXE",
       "state": "system",
@@ -23,12 +21,10 @@
         "process": "WINWORD.EXE",
         "style": "cr"
       },
-      "title": "",
       "unknownKeys": [],
       "user": null
     },
     {
-      "class": "",
       "effective": {
         "process": "Code.exe",
         "style": "keep"
@@ -42,14 +38,12 @@
         }
       },
       "hasUserEntry": true,
-      "key": "code.exe\u001f\u001f",
       "overridden": [
         "style"
       ],
       "process": "Code.exe",
       "state": "user",
       "system": null,
-      "title": "",
       "unknownKeys": [],
       "user": {
         "process": "Code.exe",
@@ -59,12 +53,10 @@
   ],
   "warnings": [
     {
-      "class": "",
       "key": "initial_punct",
       "message": "字段 initial_punct 的值 \"englsh\" 无效，已忽略",
       "process": "Tabby.exe",
-      "section": "apps",
-      "title": ""
+      "section": "apps"
     }
   ]
 }

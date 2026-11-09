@@ -14,7 +14,7 @@ use crate::state::AppState;
 use crate::update::{self, UpdatePhase};
 
 /// 没有自动安装通路的平台（Linux）在「发现新版本」时打开的页面。
-const DOWNLOAD_PAGE_URL: &str = "https://windinput.com/download";
+const DOWNLOAD_PAGE_URL: &str = "https://github.com/young8290/Moodflow/releases";
 
 /// 对话框宽度。发布说明常有较长条目，比常规对话框宽一档可减少折行。
 const DIALOG_W: i32 = 620;
@@ -99,16 +99,16 @@ fn title_row() -> Element {
 /// 首次联网同意页。输入法产品不得默认联网，须明示将访问哪些地址。
 fn consent_body() -> Element {
     let host = if crate::mode::get() == crate::mode::AppMode::Dev {
-        "dl.windinput.com/latest-dev.json（开发版更新源）"
+        "github.com/young8290/Moodflow/releases/download/dev/latest-dev.json（开发版更新源）"
     } else {
-        "dl.windinput.com/latest.json（正式版更新源）"
+        "github.com/young8290/Moodflow/releases/latest/download/latest.json（正式版更新源）"
     };
     Element::col()
         .width_match()
         .spacing(6)
         .padding_xy(18, 12)
         .child(
-            Element::label("检查更新需要联网，这是清风输入法首次使用网络功能。")
+            Element::label("检查更新需要联网，这是Moodflow 输入法首次使用网络功能。")
                 .font_size(12.0)
                 .fg_role(Role::Text)
                 .width_match()

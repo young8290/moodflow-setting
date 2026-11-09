@@ -1,43 +1,78 @@
-//! 定制版的设置界面减法：`data_custom/custom.toml` 的 `[settings] hide`。
+//! 设置界面隐藏选择器的兼容层。
 //!
-//! 选择器的语法与解析在 `wind_config::custom_settings`（与 `wind_input config check --custom`
-//! 共用），本模块只管「本机读到的是哪一份」与「设置页怎么消费」。
-//!
-//! # 为什么在本进程直接读清单，而不是等 `system.info`
-//!
-//! 页面树在窗口建好时一次性构建，而 `system.info` 要等后台线程 fetch 回来——那时
-//! 每一行、每张卡、搜索索引都已经建完了（关于页的定制版徽章就因此只能走 Signal）。
-//! 隐藏决定的是「建不建这一行」，没法事后用 Signal 补。故直接调 core 用的同一个
-//! [`wind_config::Config::custom_manifest`]：同一份解析、同一个判据（清单在安装根的
-//! `data_custom/` 下）。
-//!
-//! 安装根取自本 exe 所在目录。Windows / Linux 上设置程序与主程序同目录；macOS 的设置程序是
-//! 独立 .app，读不到清单 ⇒ 什么都不隐藏——这是安全的方向（多显示几项，功能不受影响）。
-//!
-//! # 语义
-//!
-//! 隐藏只影响**显示**：被隐藏的设置照常生效，值仍来自定制层 / 用户层，本程序也不改写它。
-//! 用户可以在「高级」页打开「显示定制版隐藏的设置」把它们找回来（重开设置窗口后生效）。
+//! 当前 Moodflow 核心不提供 settings.hide；安装态始终显示全部设置。
+//! 清单过滤保留在本进程，供已有 UI 和其回归测试使用。
 
 use std::sync::OnceLock;
 
-use wind_config::SettingsHide;
+#[derive(Default)]
+pub struct SettingsHide {
+    selectors: Vec<SettingsSelector>,
+}
+pub enum SettingsSelector {
+    Key { pattern: String, prefix: bool },
+    Feature(String),
+}
+impl SettingsSelector {
+    pub fn matches_key(&self, key: &str) -> bool {
+        match self {
+            Self::Key { pattern, prefix } => {
+                if *prefix {
+                    key.starts_with(pattern)
+                } else {
+                    key == pattern
+                }
+            }
+            Self::Feature(_) => false,
+        }
+    }
+}
+impl SettingsHide {
+    pub fn parse<T: AsRef<str>>(values: &[T]) -> (Self, Vec<String>) {
+        let mut selectors = vec![];
+        let mut errors = vec![];
+        for value in values {
+            let value = value.as_ref();
+            if let Some(key) = value.strip_prefix("key:").filter(|k| !k.is_empty()) {
+                let prefix = key.ends_with('*');
+                let pattern = key.trim_end_matches('*');
+                if pattern.is_empty() || pattern.contains('*') {
+                    errors.push("invalid key selector".into());
+                    continue;
+                }
+                selectors.push(SettingsSelector::Key {
+                    pattern: pattern.into(),
+                    prefix,
+                });
+            } else if value == "feature:wizard" {
+                selectors.push(SettingsSelector::Feature("wizard".into()));
+            } else {
+                errors.push("unsupported setting selector".into());
+            }
+        }
+        (Self { selectors }, errors)
+    }
+    pub fn is_empty(&self) -> bool {
+        self.selectors.is_empty()
+    }
+    pub fn selectors(&self) -> &[SettingsSelector] {
+        &self.selectors
+    }
+    pub fn hides_feature(&self, name: &str) -> bool {
+        self.selectors
+            .iter()
+            .any(|s| matches!(s,SettingsSelector::Feature(feature) if feature==name))
+    }
+}
 
 use crate::manifest::Manifest;
 
 /// 本机定制版的 `[settings] hide`。非定制版、清单读不到、或没写这一段 ⇒ 空。进程内只读一次。
 pub fn installed() -> &'static SettingsHide {
     static HIDE: OnceLock<SettingsHide> = OnceLock::new();
-    HIDE.get_or_init(|| {
-        let Some(m) = wind_config::Config::custom_manifest() else {
-            return SettingsHide::default();
-        };
-        let (hide, errors) = SettingsHide::parse(&m.settings.hide);
-        for e in errors {
-            tracing::warn!("定制版 custom.toml 的 [settings] hide 有一条无效，已忽略：{e}");
-        }
-        hide
-    })
+    // Moodflow's current custom manifest has no settings-hide capability. Show every setting;
+    // do not guess another file or silently hide controls using a foreign core's contract.
+    HIDE.get_or_init(SettingsHide::default)
 }
 
 /// 设置页实际使用的清单：内嵌清单，再按 `hide` 折叠（`show_all` 时不折）。

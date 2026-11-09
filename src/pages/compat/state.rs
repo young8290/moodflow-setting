@@ -725,20 +725,24 @@ mod tests {
     }
 
     /// mock 模式 + 全 crate 唯一的锁（见 `rpc::ENV_LOCK`）；测完摘掉 mock 标记。
-    struct MockGuard(std::sync::MutexGuard<'static, ()>);
+    struct MockGuard {
+        _guard: std::sync::MutexGuard<'static, ()>,
+    }
     impl MockGuard {
         fn new() -> Self {
             let g = crate::rpc::ENV_LOCK
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
-            unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+            unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
+            crate::pages::compat::mock::advanced_ui_fixtures(true);
             let _ = crate::rpc::take_mock_calls();
-            MockGuard(g)
+            MockGuard { _guard: g }
         }
     }
     impl Drop for MockGuard {
         fn drop(&mut self) {
-            unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+            unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
+            crate::pages::compat::mock::advanced_ui_fixtures(false);
         }
     }
 
@@ -953,7 +957,7 @@ mod tests {
         let _g = MockGuard::new();
         let st = loaded();
         let _ = crate::rpc::take_mock_calls();
-        assert_eq!(st.start_draft(id("  New.exe ")).unwrap(), true);
+        assert!(st.start_draft(id("  New.exe ")).unwrap());
         assert_eq!(st.draft.get(), Some(id("New.exe")), "进程名 trim");
         assert_eq!(st.selected.get(), id("New.exe").key());
         let vis = st.visible_rules();
@@ -1354,9 +1358,8 @@ mod tests {
         let st = loaded();
         st.filter.set(3);
         st.search.set("zzz".into());
-        assert_eq!(
-            st.start_draft(id("weixin.EXE")).unwrap(),
-            false,
+        assert!(
+            !st.start_draft(id("weixin.EXE")).unwrap(),
             "已存在（不区分大小写）不新建"
         );
         assert_eq!(st.draft.get(), None);

@@ -5,7 +5,7 @@
 //! core 侧 `mix_modes` 的定义真相源在代码里，预置文件不写它。
 //!
 //! 目前经此读写的字段：
-//! - `candidate_layout`：候选窗布局三态（见 WindInput 的
+//! - `candidate_layout`：候选窗布局三态（见 Moodflow 的
 //!   `docs/design/mode-candidate-layout.md`）。取代了旧的
 //!   `schema.quick_input.force_vertical`——那个布尔挂在与实例无关的全局段，判定条件
 //!   却是「这个 mix 实例含 quick 成员」。

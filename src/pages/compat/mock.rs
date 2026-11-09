@@ -1,4 +1,4 @@
-//! `compat.*` 的 mock 应答（`WIND_RPC_MOCK=1` 下离线开发 / 截图 / 页面测试用）。
+//! `compat.*` 的 mock 应答（`MOODFLOW_RPC_MOCK=1` 下离线开发 / 截图 / 页面测试用）。
 //!
 //! 应答体是**核心真实输出生成后入库**的 JSON（`src/mockdata/compat/`），不是手写：手写形状会和
 //! 核心悄悄漂移，而页面在 mock 下一切正常、接上真核心才发现字段对不上。生成器与漂移守护测试见
@@ -14,6 +14,27 @@ const LIST_SCOPE: &str = include_str!("../../mockdata/compat/list_initial_mode_s
 const LIST_NEWLINE: &str = include_str!("../../mockdata/compat/list_commit_newline.json");
 const IMPORT_PREVIEW: &str = include_str!("../../mockdata/compat/import_preview.json");
 const EXPORT_USER: &str = include_str!("../../mockdata/compat/export_user.toml");
+
+#[cfg(test)]
+thread_local! { static ADVANCED_UI: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
+#[cfg(test)]
+pub(crate) fn advanced_ui_fixtures(value: bool) {
+    ADVANCED_UI.with(|flag| flag.set(value));
+}
+#[cfg(test)]
+fn ui_fixture(s: &str) -> &str {
+    if !ADVANCED_UI.with(|flag| flag.get()) {
+        return s;
+    }
+    match s {
+        SCHEMA => include_str!("../../mockdata/compat_ui/schema.json"),
+        LIST_APPS => include_str!("../../mockdata/compat_ui/list_apps.json"),
+        LIST_SCOPE => include_str!("../../mockdata/compat_ui/list_initial_mode_scope.json"),
+        LIST_NEWLINE => include_str!("../../mockdata/compat_ui/list_commit_newline.json"),
+        IMPORT_PREVIEW => include_str!("../../mockdata/compat_ui/import_preview.json"),
+        _ => s,
+    }
+}
 
 /// 备份文件名（与核心的命名同形）。
 const BACKUP: &str = "compat.toml.bak-1700000000";
@@ -199,6 +220,8 @@ fn mock_copy(from: &RuleIdent, to: RuleIdent) {
 }
 
 fn parse(s: &str) -> Value {
+    #[cfg(test)]
+    let s = ui_fixture(s);
     serde_json::from_str(s).unwrap_or(Value::Null)
 }
 
@@ -477,7 +500,7 @@ mod tests {
         assert!(!schema.fields.is_empty() && !schema.groups.is_empty());
         for sec in Section::ALL {
             let l = ListResult::parse(&reply("compat.list", &json!({"section": sec.id()})))
-                .expect(sec.id());
+                .unwrap_or_else(|_| panic!("{}", sec.id()));
             assert!(!l.rules.is_empty(), "{} 的 mock 至少要有一条规则", sec.id());
             for r in &l.rules {
                 let want: std::collections::BTreeSet<_> = schema

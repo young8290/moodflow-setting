@@ -8,8 +8,8 @@
 //!   1. **便携**：exe 同目录有 `portable_mode`（或旧名 `wind_portable_mode`）
 //!      → `<exe 目录>\userdata\`
 //!   2. **自定义数据目录**：安装向导选定、安装器写入
-//!      `%LOCALAPPDATA%\WindInput[Dev]\datadir.conf` → 文件里那行路径
-//!   3. **默认**：`dirs::config_dir()\WindInput[Dev]`（Windows 上即漫游 `%APPDATA%`）
+//!      `%LOCALAPPDATA%\Moodflow[Dev]\datadir.conf` → 文件里那行路径
+//!   3. **默认**：`dirs::config_dir()\Moodflow[Dev]`（Windows 上即漫游 `%APPDATA%`）
 //!
 //! 便携**高于**配置文件这一条是刻意的：便携包自带 `userdata`，若还去读机器全局的
 //! `datadir.conf`，在一台装过正式版的机器上，便携包会把数据写回安装版的目录，
@@ -22,14 +22,14 @@ use crate::mode::AppMode;
 
 /// 安装器写下的自定义用户数据目录配置文件名。
 ///
-/// 真源是 `WindInput/config/app.toml` 的 `[datadir] conf_file`（安装器据此写盘），
+/// 真源是 `Moodflow/config/app.toml` 的 `[datadir] conf_file`（安装器据此写盘），
 /// core `variant::DATADIR_CONF_NAME` 与本常量都是读端副本 —— 三仓无法共享常量，
 /// 改名时须同步。
 const DATADIR_CONF_NAME: &str = "datadir.conf";
 
 /// 覆盖 `datadir.conf` 的完整路径。仅供测试与开发排查，生产部署严禁设置。
 /// core 认这个变量，本侧不认的话，排查时两个进程会读不同的配置。
-const DATADIR_CONF_ENV: &str = "WIND_DATADIR_CONF";
+const DATADIR_CONF_ENV: &str = "MOODFLOW_DATADIR_CONF";
 
 /// 当前进程该用的用户数据目录。`None` = 平台上定位不出任何可用目录（调用方须放弃写盘，
 /// 绝不能回落到程序目录 —— 那在 Program Files 下会失败，在 macOS 的 .app 里会破坏签名）。
@@ -58,7 +58,7 @@ pub fn default_user_dir_from_base(base: Option<PathBuf>, mode: AppMode) -> Optio
 /// - 便携：`<exe 目录>\localdata\` —— 便携包本就该自包含，日志留在 `%LOCALAPPDATA%`
 ///   会让"拔盘走人不留痕"落空；但它与用户数据的 `userdata\` **分开**（同级，论坛 t120），
 ///   否则备份用户数据要连带拖走上百 MB 的缓存与日志。
-/// - 否则：`%LOCALAPPDATA%\WindInput[Dev]`（本机数据，不随漫游同步到别的机器）
+/// - 否则：`%LOCALAPPDATA%\Moodflow[Dev]`（本机数据，不随漫游同步到别的机器）
 ///
 /// ⚠️ **刻意不接 `datadir.conf`**，这与 [`user_config_dir_for_mode`] 的不对称是有意的：
 /// core 的 `local_dir()` 压根不看 `custom_userdata_dir()`，安装器卸载侧的
@@ -80,7 +80,7 @@ pub fn default_local_dir_from_base(base: Option<PathBuf>, mode: AppMode) -> Opti
     base.map(|d| d.join(crate::mode::app_dir_name_of(mode)))
 }
 
-/// `datadir.conf` 的所在路径：`%LOCALAPPDATA%\WindInput[Dev]\datadir.conf`。
+/// `datadir.conf` 的所在路径：`%LOCALAPPDATA%\Moodflow[Dev]\datadir.conf`。
 ///
 /// 注意是**本机**目录（`data_local_dir`）而非漫游目录 —— 数据目录是这台机器的选择，
 /// 不该跟着漫游配置同步到别的机器上去。dev 与正式版各读各的，故带变体目录名。
@@ -195,7 +195,7 @@ mod tests {
     /// 安装器写的就是一行裸路径，尾随换行由 trim 吃掉。
     #[test]
     fn datadir_conf_plain_path_accepted() {
-        let p = abs("WindInput");
+        let p = abs("Moodflow");
         assert_eq!(parse_datadir_conf(&p), Some(PathBuf::from(&p)));
         assert_eq!(
             parse_datadir_conf(&format!("{p}\r\n")),
@@ -228,8 +228,8 @@ mod tests {
 
     #[test]
     fn datadir_conf_relative_rejected() {
-        assert_eq!(parse_datadir_conf(r"data\WindInput"), None);
-        assert_eq!(parse_datadir_conf("data/WindInput"), None);
+        assert_eq!(parse_datadir_conf(r"data\Moodflow"), None);
+        assert_eq!(parse_datadir_conf("data/Moodflow"), None);
     }
 
     /// `..` 必须挡在 `ParentDir` 那一关，而不是被 `is_absolute` 顺带挡掉 ——
@@ -272,11 +272,11 @@ mod tests {
         let base = PathBuf::from("user-config-root");
         assert_eq!(
             default_user_dir_from_base(Some(base.clone()), AppMode::Release).unwrap(),
-            base.join("WindInput")
+            base.join("Moodflow")
         );
         assert_eq!(
             default_user_dir_from_base(Some(base.clone()), AppMode::Dev).unwrap(),
-            base.join("WindInputDev")
+            base.join("MoodflowDev")
         );
     }
 
@@ -294,11 +294,11 @@ mod tests {
         let base = PathBuf::from("local-root");
         assert_eq!(
             default_local_dir_from_base(Some(base.clone()), AppMode::Release).unwrap(),
-            base.join("WindInput")
+            base.join("Moodflow")
         );
         assert_eq!(
             default_local_dir_from_base(Some(base.clone()), AppMode::Dev).unwrap(),
-            base.join("WindInputDev")
+            base.join("MoodflowDev")
         );
     }
 

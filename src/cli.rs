@@ -1,4 +1,4 @@
-//! 命令行参数解析:`--page` / `--tab` / 快捷 `--<page>` / `windinput://` 协议。
+//! 命令行参数解析:`--page` / `--tab` / 快捷 `--<page>` / `moodflow://` 协议。
 //! 冷启动与二次实例共用同一套解析。
 
 use crate::pages::dict::spec::LogicalTab;
@@ -57,10 +57,10 @@ pub fn parse_compat_request(argv: &[String]) -> bool {
     false
 }
 
-/// 从 argv 提取协议 URL(`windinput://` 前缀,大小写不敏感)。
+/// 从 argv 提取协议 URL(`moodflow://` 前缀,大小写不敏感)。
 pub fn parse_protocol(argv: &[String]) -> Option<String> {
     argv.iter()
-        .find(|a| a.to_ascii_lowercase().starts_with("windinput://"))
+        .find(|a| a.to_ascii_lowercase().starts_with("moodflow://"))
         .cloned()
 }
 
@@ -157,10 +157,10 @@ pub fn parse_dict_target(argv: &[String]) -> Option<DictTarget> {
             }
         } else if let Some(v) = a.strip_prefix("--type=") {
             t.set_tab(v);
-        } else if a == "--type" {
-            if let Some(v) = it.next() {
-                t.set_tab(v);
-            }
+        } else if a == "--type"
+            && let Some(v) = it.next()
+        {
+            t.set_tab(v);
         }
     }
     Some(t)
@@ -213,10 +213,10 @@ pub fn parse_add_word(argv: &[String]) -> Option<AddWordParams> {
             }
         } else if let Some(v) = a.strip_prefix("--schema=") {
             p.schema = v.to_string();
-        } else if a == "--schema" {
-            if let Some(v) = it.next() {
-                p.schema = v.to_string();
-            }
+        } else if a == "--schema"
+            && let Some(v) = it.next()
+        {
+            p.schema = v.to_string();
         }
     }
     Some(p)
@@ -268,8 +268,8 @@ mod tests {
     #[test]
     fn parse_protocol_extract() {
         assert_eq!(
-            parse_protocol(&a(&["exe", "windinput://import/theme?url=https://x"])).as_deref(),
-            Some("windinput://import/theme?url=https://x")
+            parse_protocol(&a(&["exe", "moodflow://import/theme?url=https://x"])).as_deref(),
+            Some("moodflow://import/theme?url=https://x")
         );
         assert_eq!(parse_protocol(&a(&["exe", "--page", "input"])), None);
     }
@@ -322,12 +322,12 @@ mod tests {
     /// 同一个 argv 会先走协议路由、又被当文件导入一次,首帧多弹一条「读取方案包失败」。
     #[test]
     fn parse_import_file_skips_protocol_urls() {
-        let url = "windinput://import/schema?url=https%3A%2F%2Fdl.windinput.com%2Fa.wpkg";
+        let url = "moodflow://import/schema?url=https%3A%2F%2Fgithub.com%2Fyoung8290%2FMoodflow%2Freleases%2Fdownload%2Ftest%2Fa.wpkg";
         assert_eq!(parse_import_file(&a(&["exe", url])), None);
         assert_eq!(
             parse_import_file(&a(&[
                 "exe",
-                "WindInput://import/theme?url=https://x/b.wtheme"
+                "Moodflow://import/theme?url=https://x/b.wtheme"
             ])),
             None
         );

@@ -1,0 +1,41 @@
+name: Windows MSVC
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    env:
+      CARGO_BUILD_JOBS: '2'
+      MOODFLOW_APP_VERSION: 0.124.1-beta
+    defaults:
+      run:
+        working-directory: moodflow-setting
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: moodflow-setting
+      - uses: actions/checkout@v4
+        with:
+          repository: young8290/Moodflow
+          ref: af3dcfa46ba14c4c1fa7a6a0f923f2007cf4b5b2
+          path: Moodflow
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: moodflow-setting
+      # --all 还会把整个核心 path 依赖树放进同一条 rustfmt 命令，超过 Windows 命令行长度。
+      # 核心 workspace 自身的 CI 检查依赖源码；这里检查设置端所有本地目标。
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test -- --test-threads=2
+      - run: cargo build --release

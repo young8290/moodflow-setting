@@ -3,7 +3,7 @@
 #   width：select 下拉像素宽；options_source：动态选项来源（themes/fonts/codetableSchemas/pinyinSchemas）
 # 注：默认值不在此声明，统一取自 core capability 快照（capabilities.snapshot.json）。
 #
-# 【对照来源】参考项目 WindInput/wind_setting（web 配置页）的页面/分区/字段组织与文案；
+# 【对照来源】参考项目 Moodflow/wind_setting（web 配置页）的页面/分区/字段组织与文案；
 #   key 必须与本项目 core 的真实配置点路径逐字一致（见 capabilities.snapshot.json）。
 # 【分组】group → 页面主体；section → 页内子卡片。
 #   前端按 (group, section) 聚合：同 section 的项渲染为一张卡片，section 首次出现序为卡片序，
@@ -263,16 +263,6 @@ subsection = "词频调整"
 type = "toggle"
 label = "启用词频调整"
 hint = "根据使用频次动态调整候选排序"
-
-[[items]]
-key = "schema.codetable.frequency.record_always"
-group = "schema"
-section = "上屏行为"
-subsection = "词频调整"
-type = "toggle"
-label = "仅记录次数"
-hint = "不调整候选顺序，只记录每个字词的上屏次数，可在词库管理的「词频」中查看和导出。之后若开启词频调整，已记录的次数会立刻参与排序"
-enabled_when = "schema.codetable.frequency.enabled == false"
 
 [[items]]
 key = "schema.codetable.frequency.strategy"
@@ -558,16 +548,6 @@ label = "启用词频调整"
 hint = "根据使用频次动态调整候选排序"
 
 [[items]]
-key = "schema.pinyin.frequency.record_always"
-group = "schema"
-section = "候选行为"
-subsection = "词频调整"
-type = "toggle"
-label = "仅记录次数"
-hint = "不调整候选顺序，只记录每个字词的上屏次数，可在词库管理的「词频」中查看和导出。之后若开启词频调整，已记录的次数会立刻参与排序"
-enabled_when = "schema.pinyin.frequency.enabled == false"
-
-[[items]]
 key = "schema.pinyin.frequency.promote_prefix"
 group = "schema"
 section = "候选行为"
@@ -627,16 +607,6 @@ max = 10
 unit = "个音节"
 
 # 简拼（GH#180）
-[[items]]
-key = "schema.pinyin.abbrev.enabled"
-group = "schema"
-section = "候选行为"
-subsection = "简拼"
-type = "toggle"
-label = "启用简拼"
-hint = "只打声母也能出词，如 nh → 你好、bzd → 不知道，也可与全拼混打（nhao）"
-
-# 自动学习
 [[items]]
 key = "schema.pinyin.auto_learn.enabled"
 group = "schema"
@@ -933,16 +903,6 @@ label = "超码长时显示拼音前缀匹配"
 hint = "编码超过最大码长后同上；开着可先选前半段上屏，剩余接着打"
 
 [[items]]
-key = "schema.mix.pinyin_code_hint"
-group = "schema"
-section = "混输行为"
-subsection = "拼音相关"
-type = "toggle"
-label = "拼音候选显示码表编码"
-hint = "编码反查：用拼音打出的字词，旁边显示它的码表编码（如五笔拼音下打 nihao，「你好」旁显示 wqvb），方便记码。只管混输方案；纯拼音方案看「拼音方案配置 → 编码提示来源」，临时拼音看「输入 → 临时拼音」"
-
-# 超码长仅查拼音（core 默认 true，主流混输行为）：隐藏，不对用户开放。
-[[items]]
 key = "schema.mix.pinyin_only_overflow"
 group = "schema"
 section = "混输行为"
@@ -1018,15 +978,6 @@ section = "英文行为"
 type = "toggle"
 label = "启用词频调整"
 hint = "按使用频率调整英文候选顺序"
-
-[[items]]
-key = "schema.english.frequency.record_always"
-group = "schema"
-section = "英文行为"
-type = "toggle"
-label = "仅记录次数"
-hint = "不调整候选顺序，只记录每个字词的上屏次数，可在词库管理的「词频」中查看和导出。之后若开启词频调整，已记录的次数会立刻参与排序"
-enabled_when = "schema.english.frequency.enabled == false"
 
 [[items]]
 key = "schema.english.frequency.strategy"
@@ -1134,35 +1085,6 @@ hint = "上屏英文词后补一个空格，连续打词不必手动按；回车
 # 两者共用英文词库，临时英文不另设开关——同临时拼音跟随拼音方案的 auto_learn。
 # 快捷输入里的英文不走这条，那边有自己的「快捷输入历史」。
 # temp_max_entries（临时词库容量）是内部字段，不开放，见 capabilities.rs 的 UNCOVERED_BY_DESIGN。
-[[items]]
-key = "schema.english.auto_learn.enabled"
-group = "schema"
-section = "英文行为"
-subsection = "自动造词"
-type = "toggle"
-label = "启用自动造词"
-hint = "上屏了词库里没有的原文就记下来（选中原文候选、回车或空格上屏原码、标点顶屏原文都算），先存入临时词库，用够次数再转入用户词库。英文方案与临时英文共用此开关；快捷输入里的英文不在此列（那里有快捷输入历史）"
-
-[[items]]
-key = "schema.english.auto_learn.promote_count"
-group = "schema"
-section = "英文行为"
-subsection = "自动造词"
-type = "number"
-label = "转入用户词库次数"
-hint = "用满几次后永久收录进用户词库（含记下的那一次）；0 = 不收录，一直留在临时词库"
-min = 0
-max = 20
-enabled_when = "schema.english.auto_learn.enabled == true"
-
-# ═══════════════════════════ 输入 ═══════════════════════════
-# ── 字符与标点 ──
-# 输入页的分节顺序（＝导航顺序）分四段，越靠前越"每天都在起作用"：
-#   ① 字符形态：字符与标点 / 智能符号 / 标点配对 —— 打出来长什么样；
-#   ② 按键：按键行为 / 候选无效按键 —— 键按下去做什么；
-#   ③ 临时模式：快捷输入 / 临时拼音 / 临时英文 / 生僻字 —— 临时换一种打法；
-#   ④ 特殊：简繁转换 / Emoji / 网址输入 / Unicode 输入 —— 候选或上屏结果另有来路；
-#   末尾 联想 / 词频 是候选的后处理与统计口径，两块都不常改。
 [[items]]
 key = "input.filter_mode"
 group = "input"
@@ -1752,19 +1674,6 @@ options = [
 ]
 
 [[items]]
-key = "input.temp_english.shift_when_composing"
-group = "input"
-section = "临时英文"
-type = "select"
-label = "输入编码时按 Shift+字母"
-hint = "已经敲了编码时再按 Shift+字母的行为。「上屏候选并进入临时英文」会先上屏高亮候选，再以该字母进入临时英文；英文方案下不生效"
-width = 210
-options = [
-  { value = "buffer", label = "大写字母进入编码" },
-  { value = "commit_enter", label = "上屏候选并进入临时英文" },
-]
-
-[[items]]
 key = "input.temp_english.show_candidates"
 group = "input"
 section = "临时英文"
@@ -2023,63 +1932,6 @@ options = [
 ]
 
 [[items]]
-key = "input.emoji.max_hosts"
-group = "input"
-section = "Emoji/OpenCC"
-type = "number"
-label = "追加范围"
-hint = "只为列表前 N 个候选追加 emoji。1 = 仅首选"
-min = 0
-max = 20
-enabled_when = "input.emoji.enabled == true"
-
-[[items]]
-key = "input.emoji.max_per_word"
-group = "input"
-section = "Emoji/OpenCC"
-type = "number"
-label = "每词上限"
-hint = "一个词最多追加的 emoji 个数"
-min = 1
-max = 10
-enabled_when = "input.emoji.enabled == true"
-
-[[items]]
-key = "input.emoji.min_word_chars"
-group = "input"
-section = "Emoji/OpenCC"
-type = "number"
-label = "最少字数"
-hint = "候选少于此字数时不追加。默认 2，即不为单字追加"
-min = 1
-max = 8
-enabled_when = "input.emoji.enabled == true"
-
-[[items]]
-key = "input.emoji.categories"
-group = "input"
-section = "Emoji/OpenCC"
-type = "toggle"
-label = "启用分类词"
-hint = "「动物」「水果」等分类词会带出整组 emoji，数量受每词上限约束"
-enabled_when = "input.emoji.enabled == true"
-
-# 附加模块（core 的 EMOJI_MODULES + 用户放进用户目录 emoji\ 的 OpenCC 表）：条数不定，走对话框，
-# 整张 input.emoji.modules 表读写。
-[[items]]
-key = "input.emoji.modules"
-group = "input"
-section = "Emoji/OpenCC"
-type = "dialog_button_emoji_modules"
-label = "附加模块"
-hint = "按模块加挂 emoji 与符号表（偏旁、希腊字母、单位等）；也可在用户目录 emoji\\ 下放 OpenCC 格式的 .txt 自行扩充"
-enabled_when = "input.emoji.enabled == true"
-
-# ── 网址/邮箱输入 ──
-# 两个模式合成一个分区：它们共用同一个补全候选源（core 的 mode_completion.rs），
-# 开关、触发条件、候选行为逐条对位，用户学一次即可。历史与后缀的「查看/清空」入口
-# 都在词库页（那里有现成的列表 + 逐条删 + 清空确认），本分区的 hint 里指路过去。
-[[items]]
 key = "input.url.enabled"
 group = "input"
 section = "网址/邮箱输入"
@@ -2203,7 +2055,7 @@ options = [
 ]
 
 # ── 联想 ──
-# 上屏之后按刚上屏的内容再给一批候选。core 侧设计见 WindInput/docs/design/association.md。
+# 上屏之后按刚上屏的内容再给一批候选。core 侧设计见 Moodflow/docs/design/association.md。
 # 注：四个「来源开关」(history/bigram/prefix/punct) 不在此暴露，理由见 capabilities.rs 的
 #     UNCOVERED_BY_DESIGN ⑱。
 # 注：本段对应 core 的 [input.association]，那是**桌面基线**；移动端取值在 core 的
@@ -2258,17 +2110,6 @@ label = "空格上屏联想候选"
 hint = "空格上屏当前高亮的联想词，多数输入法如此。关掉则空格照常出空格，联想窗同时收起"
 enabled_when = "input.association.kind != off"
 
-[[items]]
-key = "input.association.select_keys_commit"
-group = "input"
-section = "联想"
-type = "toggle"
-label = "二三候选键选联想"
-hint = "开启（默认）时 ; ' 等二三候选键照常选第 2、3 条联想词。关掉则联想窗出来后按这些键不选联想：联想窗收起，该键照常输入（如出分号；若它另是快捷输入等模式的引导键，则照常进该模式）"
-enabled_when = "input.association.kind != off"
-
-# 回车与退格的默认值**相反**（回车透传、退格吃键）：回车的透传是把正事办了，退格的透传
-# 是删掉刚上屏的字、不可逆。core 侧理由见 AssociationConfig 两个字段的文档。
 [[items]]
 key = "input.association.enter_cancels_only"
 group = "input"
@@ -2356,17 +2197,6 @@ label = "切换时编码上屏"
 hint = "中文切换为英文、或切换输入方案时，将已输入的编码直接上屏"
 
 [[items]]
-key = "keys.ctrl_space_toggle"
-group = "keys"
-section = "中英文切换"
-type = "toggle"
-label = "Ctrl+空格 切换中英文"
-hint = "关闭后 Ctrl+空格 原样交给应用（如 IDEA、Android Studio 的代码提示）。在「全局自定义按键」里把 Ctrl+空格 设为「不启用」效果相同。若 Windows 也开着同名系统热键，应用仍收不到这个键，需到 系统设置 → 时间和语言 → 输入 → 高级键盘设置 → 输入语言热键 里关闭「输入法/非输入法切换」"
-# GH#172。落点是 TSF DLL 的吃键判定 + 系统热键翻 compartment 后的服务端拒绝，都是 Windows 专属；
-# macOS 的中英切换走系统输入源快捷键，与本项无关。
-platform = "windows"
-
-[[items]]
 key = "input.capslock.cancel_on_mode_switch"
 group = "keys"
 section = "中英文切换"
@@ -2378,24 +2208,6 @@ hint = "切换中英文模式时自动取消大写锁定状态；切换方案不
 # IOHIDSetModifierLockState 那条完全不同的路）。补 VK→CGKeyCode 映射也没用。
 platform = "windows"
 
-[[items]]
-key = "input.capslock.mode_after_cancel"
-group = "keys"
-section = "中英文切换"
-type = "select"
-label = "取消大写后进入"
-hint = "上一项开着时，切换中英文取消了大写锁定之后落到哪个模式。「中文」是原有行为：Shift 回到中文，Ctrl+空格 按它自己的切换方向"
-width = 210
-enabled_when = "input.capslock.cancel_on_mode_switch == true"
-# 平台门控同上一项：它没有落点，本项也就无从生效。
-platform = "windows"
-options = [
-  { value = "chinese", label = "中文" },
-  { value = "english", label = "英文" },
-  { value = "toggle", label = "照常切换" },
-]
-
-# ── 候选词管理 ──
 [[items]]
 key = "keys.pin_candidate"
 group = "keys"
@@ -3046,25 +2858,12 @@ max = 64
 #   （设置端自带的「词库注释」悬停预设就是），而 enabled_when 表达不了
 #   「注释开 或 悬停开」这种或条件——挂上只看注释开关，会在悬停仍要用时把它们误置灰。
 [[items]]
-key = "ui.candidate.comment_enabled"
-group = "ui"
-section = "候选标注"
-type = "toggle"
-label = "显示候选注释"
-hint = "候选词右侧的编码、注音等小字；用不到可关掉以省内存"
-
-# 候选注释段（候选右侧的小字）：卡片上只占一行「候选注释 …… [设置]」，三个字段与模板参考
-# 全在对话框里（专用 builder，见 manifest.rs 的 COMMENT_HOST_KEY）。
-# 宿主取**横排**模板：它是对话框里第一个出现的字段，而横排宽度由全部候选共享、最需斟酌。
-# 卡片行的 hint 保持一句话——模板语法属于对话框里的事，摊在卡片上没人看得完。
-[[items]]
 key = "ui.candidate.comment_template_horizontal"
 group = "ui"
 section = "候选标注"
 type = "dialog_button"
 label = "候选注释"
 hint = "候选词右侧小字的内容与最大字数，横排、竖排可分别设置"
-enabled_when = "ui.candidate.comment_enabled == true"
 
 [[items]]
 key = "ui.candidate.comment_template_vertical"
@@ -3148,21 +2947,12 @@ hint = "命令候选前的提示符号"
 # ── 候选项提示 ──
 # 总开关置于卡片首行，其余各行随它置灰。
 [[items]]
-key = "ui.tooltip.enabled"
-group = "ui"
-section = "候选项提示"
-type = "toggle"
-label = "显示悬停提示"
-hint = "鼠标停在候选上时弹出的编码、拼音等提示；用不到可关掉以省内存"
-
-[[items]]
 key = "ui.tooltip.delay"
 group = "ui"
 section = "候选项提示"
 type = "number"
 label = "悬停延时"
 hint = "鼠标停留在候选上多久后弹出提示框（毫秒）；越大越不易误触"
-enabled_when = "ui.tooltip.enabled == true"
 min = 0
 max = 2000
 step = 50
@@ -3179,7 +2969,6 @@ section = "候选项提示"
 type = "dialog_button_tooltip_sections"
 label = "提示内容"
 hint = "悬停提示由若干段自上而下组成，每段可启停、排序、改写内容，或按预设添加"
-enabled_when = "ui.tooltip.enabled == true"
 
 [[items]]
 key = "ui.tooltip.max_chars"
@@ -3191,7 +2980,6 @@ hint = "超出部分以省略号截断；0 = 不限。复制、上屏取的仍�
 min = 0
 max = 2000
 step = 10
-enabled_when = "ui.tooltip.enabled == true"
 
 [[items]]
 key = "ui.tooltip.wrap_width"
@@ -3203,7 +2991,6 @@ hint = "一行超过这个宽度就换行，汉字计 2、字母计 1；0 = 不�
 min = 0
 max = 200
 step = 2
-enabled_when = "ui.tooltip.enabled == true"
 
 # ── 状态提示（行为/位置类；纯视觉如颜色/字号/透明度/圆角由主题 theme.toml 处理，不在此）──
 [[items]]
@@ -3446,6 +3233,7 @@ options = [
   { value = "s2t", label = "简 / 繁", hint = "简入繁出的开关，点击切换；出厂关着" },
   { value = "t2s", label = "繁 → 简", hint = "繁入简出的开关，点击切换；格里恒显「简」，亮起表示正在转换。出厂关着" },
   { value = "soft_keyboard", label = "软键盘", hint = "键盘按钮，点击开关软键盘面板；右键可直接选一种键盘" },
+  { value = "moodflow", label = "Moodflow", hint = "打开 Moodflow 工具与看板" },
   { value = "settings", label = "设置", hint = "齿轮按钮，点击打开功能菜单。隐藏它也不影响使用——右键工具栏任意位置同样能打开菜单" },
 ]
 
@@ -3663,15 +3451,6 @@ platform = "windows"
 # `system.memoryStats`），见 `pages/memory.rs`；拼接在 `advanced_page` 里做。
 # 分区名与 `memory::SECTION` 必须一致，改一处要同改另一处。
 [[items]]
-key = "schema.keep_all_loaded"
-group = "advanced"
-section = "性能与诊断"
-type = "toggle"
-label = "常驻所有方案"
-hint = "开启：所有方案预先加载并留在内存里，切换方案零等待。关闭：只加载用到的方案，30 分钟不用自动卸载，省内存"
-
-# ── 游戏兼容 ──
-[[items]]
 key = "system.dota2_compat"
 group = "advanced"
 section = "游戏兼容"
@@ -3787,3 +3566,11 @@ section = "日志设置"
 type = "open_log_dir"
 label = "日志目录"
 hint = "三个模块的日志都在这里（TSF 端在 tsf_log 子目录）"
+
+[[items]]
+key = "local.memory.runtime_note"
+group = "advanced"
+section = "性能与诊断"
+type = "note"
+label = "内存诊断"
+hint = "查看当前程序内存与缓存信息。"

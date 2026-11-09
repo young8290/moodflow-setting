@@ -55,7 +55,7 @@ impl Conflict {
 ///
 /// 目前唯一的 `Coexist`：**修饰键次选（`lrshift`/`lrctrl`）× 中英切换键**。
 /// 内核 2026-08-03 起把修饰键选词改到 KEY_UP 轻敲，并明确裁决为「有候选选词、
-/// 无候选切换」（见 `../WindInput/wind_input/crates/wind-coordinator/src/handle_candidate.rs`
+/// 无候选切换」（见 `../Moodflow/moodflow_core/crates/wind-coordinator/src/handle_candidate.rs`
 /// 的 `handle_select_key_up`）——两个功能都留着，只是分时。
 /// 在此之前它确实是 Blocking（选词吃掉 KEY_DOWN，切换永远等不到 `had_pending`），
 /// 本仓的文案也一直按「真冲突」写，是内核行为变了、这里跟着变。

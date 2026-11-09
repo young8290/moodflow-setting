@@ -676,8 +676,8 @@ fn item_row(label: &str, desc: &str, control: Element) -> Element {
     Element::row()
         .width_match()
         .cross(Align::Center)
-        .padding_xy(0, f.row_pad_y())
-        .spacing(f.gap())
+        .padding_xy(0, f.row_pad_y(m))
+        .spacing(f.gap(m))
         .child(left)
         .child(control)
 }
@@ -724,7 +724,7 @@ fn welcome_body() -> Element {
     use crate::pages::{DOCS_URL, MARKET_URL, THEME_EDITOR_URL};
     body()
         .child(page_head(
-            "欢迎使用清风输入法",
+            "欢迎使用Moodflow 输入法",
             "花一分钟，按你的打字习惯配好最常用的设置。",
         ))
         .child(
@@ -742,19 +742,19 @@ fn welcome_body() -> Element {
                 link_row(
                     "使用文档",
                     "每项功能、每个设置的详细说明",
-                    "windinput.com/docs",
+                    "GitHub · 使用文档",
                     DOCS_URL,
                 ),
                 link_row(
                     "资源市场",
                     "主题皮肤、输入方案等资源，下载即用",
-                    "market.windinput.com",
+                    "GitHub · 发布资源",
                     MARKET_URL,
                 ),
                 link_row(
                     "主题编辑器",
                     "在线设计属于自己的皮肤",
-                    "theme.windinput.com",
+                    "GitHub · 主题文件",
                     THEME_EDITOR_URL,
                 ),
             ],

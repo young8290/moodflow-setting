@@ -1,6 +1,6 @@
 //! 版本解析与升级判定。
 //!
-//! 本地版本来自 build.rs 注入的 `WIND_SETTING_VERSION`，有四种形态：
+//! 本地版本来自 build.rs 注入的 `MOODFLOW_SETTING_VERSION`，有四种形态：
 //!   - `v0.106.0`                  tag 上
 //!   - `v0.106.0+a1b2c3d`          tag 之后有提交
 //!   - `v0.106.0+a1b2c3d.dirty`    且工作区脏
@@ -37,7 +37,7 @@ pub fn parse(raw: &str) -> Option<Version> {
 
 /// 编译期注入的本地版本字符串（原样，含 `v` 前缀与 build metadata）。
 pub fn local_raw() -> &'static str {
-    env!("WIND_SETTING_VERSION")
+    env!("MOODFLOW_SETTING_VERSION")
 }
 
 /// 解析后的本地版本；无 tag 的开发构建返回 `None`。
@@ -175,7 +175,7 @@ mod tests {
         let raw = local_raw();
         assert!(
             !raw.is_empty(),
-            "WIND_SETTING_VERSION 为空，build.rs 注入失效"
+            "MOODFLOW_SETTING_VERSION 为空，build.rs 注入失效"
         );
     }
 }

@@ -1,7 +1,7 @@
 //! 本程序各类包文件的关联（HKCU，用户级，不需管理员权限）：方案包 `.wpkg` 与主题包
 //! `.wtheme`。
 //!
-//! 与 [`crate::protocol`] 的 `windinput://` 注册同一套规则与门控：便携版恒不注册、
+//! 与 [`crate::protocol`] 的 `moodflow://` 注册同一套规则与门控：便携版恒不注册、
 //! 用户取消后不自愈、指向已消失 exe 的残留才在启动时静默收回。三态判定
 //! （[`Registration`]）、命令行构造与残留判断直接复用 protocol 的纯函数 ——
 //! 它们本就与「协议还是扩展名」无关。
@@ -43,8 +43,8 @@ pub struct Assoc {
 /// 方案包。
 pub const PACKAGE: Assoc = Assoc {
     ext: ".wpkg",
-    progid: "WindInput.Package",
-    type_name: "清风输入法方案包",
+    progid: "Moodflow.Package",
+    type_name: "Moodflow 输入法方案包",
     short_name: "方案包",
     icon_id: 2,
 };
@@ -56,8 +56,8 @@ pub const PACKAGE: Assoc = Assoc {
 /// 指向不存在的资源 ID 会让图标直接空掉，比暂时共用更糟。
 pub const THEME: Assoc = Assoc {
     ext: ".wtheme",
-    progid: "WindInput.Theme",
-    type_name: "清风输入法主题包",
+    progid: "Moodflow.Theme",
+    type_name: "Moodflow 输入法主题包",
     short_name: "主题包",
     icon_id: 2,
 };
@@ -287,7 +287,7 @@ pub fn facts_of(a: &Assoc) -> crate::protocol::Facts {
 }
 
 // ── Linux：XDG 关联（语义见 crate::xdg_assoc）。两个扩展名各对一个 MIME 类型，
-//    共用一个 windinput-import.desktop，但注册/取消各管各的类型。
+//    共用一个 moodflow-import.desktop，但注册/取消各管各的类型。
 
 #[cfg(target_os = "linux")]
 pub fn facts_of(a: &Assoc) -> crate::protocol::Facts {
@@ -393,8 +393,8 @@ mod tests {
     /// 按字节比会把自己的注册误判成他人的，每次启动都"自愈"一遍。
     #[test]
     fn own_progid_ownership_follows_command() {
-        let want = command_for_exe(r"C:\Program Files\WindInput\wind_setting.exe");
-        let same_case_diff = command_for_exe(r"c:\program files\windinput\WIND_SETTING.EXE");
+        let want = command_for_exe(r"C:\Program Files\Moodflow\wind_setting.exe");
+        let same_case_diff = command_for_exe(r"c:\program files\moodflow\WIND_SETTING.EXE");
         assert_eq!(
             classify_assoc(
                 Some(PACKAGE.progid),
@@ -406,12 +406,7 @@ mod tests {
         );
         // ProgId 名大小写不同也算本程序的（注册表键名不区分大小写）。
         assert_eq!(
-            classify_assoc(
-                Some("windinput.package"),
-                Some(&want),
-                &want,
-                PACKAGE.progid
-            ),
+            classify_assoc(Some("moodflow.package"), Some(&want), &want, PACKAGE.progid),
             Registration::Ours
         );
         // ProgId 是本程序的但命令指向旧安装路径 → 他人（残留），自愈据此收回。
@@ -460,8 +455,8 @@ mod tests {
     /// 添加顺序一变就指到主图标去了——那正是本功能要消除的「文件和程序同一个图标」。
     #[test]
     fn icon_value_uses_negative_resource_id() {
-        let v = icon_value_for_exe(r"C:\Program Files\WindInput\wind_setting.exe", 2);
-        assert_eq!(v, r#""C:\Program Files\WindInput\wind_setting.exe",-2"#);
+        let v = icon_value_for_exe(r"C:\Program Files\Moodflow\wind_setting.exe", 2);
+        assert_eq!(v, r#""C:\Program Files\Moodflow\wind_setting.exe",-2"#);
         assert!(
             v.ends_with(",-2"),
             "必须按资源 ID 取（负号），不是位置序号：{v}"

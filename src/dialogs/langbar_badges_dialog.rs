@@ -156,6 +156,10 @@ pub struct BadgeForm {
     pub badge_alpha: Signal<f32>,
     /// 取全局滑块**当前编辑中**的值；`None` = 拿不到（滑块尚未建出等），保留原值。
     /// 由 `manifest.rs` 接到 `FieldRegistry::getters` 上，见 [`Self::sync_badge_alpha`]。
+    #[allow(
+        clippy::type_complexity,
+        reason = "Optional UI-thread callback reads an unsaved slider value"
+    )]
     pub badge_alpha_source: Rc<RefCell<Option<Box<dyn Fn() -> Option<f32>>>>>,
     /// 大小倍率。用 [`Element::stepper`] 而非文本框：倍率是个连续量，按 0.1 步进点
     /// 两下就到位，而文本框还得自己校验"填了个字母"。
@@ -300,6 +304,10 @@ impl LangBarBadgesUi {
     }
 
     /// 提交表单：新建则追加，编辑则替换。
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "Each badge form field is validated and committed together"
+    )]
     pub fn commit_form(
         &self,
         index: usize,

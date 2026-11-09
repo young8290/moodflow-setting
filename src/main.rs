@@ -4,7 +4,7 @@
 // 一直没暴露这个问题，Linux 侧一跑就撞上。加 `not(test)` 两边都对。
 #![cfg_attr(all(windows, not(test)), windows_subsystem = "windows")]
 
-//! wind_setting — 清风输入法原生设置应用（基于 windui）。
+//! wind_setting — Moodflow 输入法原生设置应用（基于 windui）。
 //!
 //! 通过 JSON-RPC over named pipe 与核心服务通信，不改动 core 接口。
 //! 无边框窗口 + 自定义标题栏，7 Tab 清单驱动（manifest 分组），运行时明暗换肤。
@@ -205,7 +205,7 @@ pub(crate) fn open_main_window(ctx: &mut EventCtx, app: &Rc<RefCell<state::AppSt
     // 标志还写着"已关闭"，下一次二次实例会再重建一个。
     app.borrow().main_window_closed.set(false);
     ctx.open_window(
-        Window::new("清风输入法设置", MAIN_W, MAIN_H)
+        Window::new("Moodflow 输入法设置", MAIN_W, MAIN_H)
             .single(MAIN_SINGLE_KEY)
             .frameless(true)
             .centered(true)
@@ -413,7 +413,11 @@ fn main() {
             (DICT_MIN_W, DICT_MIN_H),
         )
     } else {
-        ("清风输入法设置", (MAIN_W, MAIN_H), (MAIN_MIN_W, MAIN_MIN_H))
+        (
+            "Moodflow 输入法设置",
+            (MAIN_W, MAIN_H),
+            (MAIN_MIN_W, MAIN_MIN_H),
+        )
     };
     memstat::mark("[App::new 前]");
     let app = App::new(title, win_w, win_h)
@@ -692,7 +696,7 @@ fn main() {
 
     memstat::mark("[run 之前]");
     app.bg(theme_def::theme_for(start_dark).palette.bg)
-        // `--screenshot <path>` 离屏出图（配合 WIND_RPC_MOCK=1 可无 core 核对 UI）。
+        // `--screenshot <path>` 离屏出图（配合 MOODFLOW_RPC_MOCK=1 可无 core 核对 UI）。
         .screenshot_from_args()
         .content(ui)
         .run();
@@ -828,7 +832,7 @@ mod tests {
         let state = Rc::new(RefCell::new(state::AppState::empty()));
 
         route_protocol(
-            "windinput://import/theme?url=https%3A%2F%2Fexample.com%2Fdark.toml&name=Dark",
+            "moodflow://import/theme?url=https%3A%2F%2Fexample.com%2Fdark.toml&name=Dark",
             &state,
         );
 
@@ -854,11 +858,11 @@ mod tests {
         let state = Rc::new(RefCell::new(state::AppState::empty()));
 
         route_protocol(
-            "windinput://import/theme?url=https%3A%2F%2Fexample.com%2Fdark.toml&name=Dark",
+            "moodflow://import/theme?url=https%3A%2F%2Fexample.com%2Fdark.toml&name=Dark",
             &state,
         );
         route_protocol(
-            "windinput://import/dict?url=https%3A%2F%2Fexample.com%2Fdict.zip&name=Dict",
+            "moodflow://import/dict?url=https%3A%2F%2Fexample.com%2Fdict.zip&name=Dict",
             &state,
         );
 
@@ -882,7 +886,7 @@ mod tests {
         let state = Rc::new(RefCell::new(state::AppState::empty()));
 
         route_protocol(
-            "windinput://import/schema?url=https%3A%2F%2Fexample.com%2Fpkg.zip&name=Pkg",
+            "moodflow://import/schema?url=https%3A%2F%2Fexample.com%2Fpkg.zip&name=Pkg",
             &state,
         );
 
@@ -893,7 +897,7 @@ mod tests {
         assert!(!st.theme_import_dialog_visible.get());
         let (kind, msg) = st.feedback.get().expect("应有反馈");
         assert_eq!(kind, ToastKind::Error);
-        assert!(msg.contains("官方域名"), "{msg}");
+        assert!(msg.contains("自有 GitHub"), "{msg}");
     }
 
     #[test]
@@ -901,10 +905,10 @@ mod tests {
         let state = Rc::new(RefCell::new(state::AppState::empty()));
 
         route_protocol(
-            "windinput://import/theme?url=https%3A%2F%2Fexample.com%2Fdark.toml&name=Dark",
+            "moodflow://import/theme?url=https%3A%2F%2Fexample.com%2Fdark.toml&name=Dark",
             &state,
         );
-        route_protocol("windinput://import/theme", &state);
+        route_protocol("moodflow://import/theme", &state);
 
         let st = state.borrow();
         let (kind, msg) = st.feedback.get().expect("应有反馈");

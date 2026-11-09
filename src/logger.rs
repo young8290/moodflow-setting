@@ -11,7 +11,7 @@
 //!
 //! 本机状态目录由 [`crate::user_dir::local_dir_for_mode`] 决定，与 core 的
 //! `Config::local_dir()` 同源：便携部署落 `<exe 目录>\localdata\logs`，
-//! 否则 `%LOCALAPPDATA%\WindInput[Dev]\logs`（macOS `~/Library/Application Support/…`）。
+//! 否则 `%LOCALAPPDATA%\Moodflow[Dev]\logs`（macOS `~/Library/Application Support/…`）。
 //!
 //! 注：应用以 windows_subsystem="windows" 运行，无控制台，仅写文件。
 //! 开发时可用 `RUST_LOG=debug cargo run` 覆盖级别。

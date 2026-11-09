@@ -1,12 +1,12 @@
 //! 桌面集成（高级页卡片 + 四个确认对话框）。
 //!
-//! 管两条关联：`windinput://` 协议（一键导入链接靠它从浏览器唤起本程序）与
+//! 管两条关联：`moodflow://` 协议（一键导入链接靠它从浏览器唤起本程序）与
 //! `.wpkg` 文件关联（双击方案包直接进导入确认）。两者同一套规则与门控，
 //! 只是注册表形状不同（见 [`crate::file_assoc`]）。
 //!
 //! 状态**每次现读注册表**（[`crate::protocol::current_facts`] /
 //! [`crate::file_assoc::facts_of`]；Linux 上是现查 XDG，见 [`crate::xdg_assoc`]），不缓存判断结果：
-//! 关联可能被别的程序、或另一份清风输入法在我们运行期间改掉，缓存下来只会让界面
+//! 关联可能被别的程序、或另一份Moodflow 输入法在我们运行期间改掉，缓存下来只会让界面
 //! 显示一个早已不成立的结论。`refresh` 在建卡片时与每次操作后各调一次。
 
 use std::cell::RefCell;
@@ -171,14 +171,14 @@ fn foreign_command(reg: &Registration) -> Option<&str> {
 
 fn overwrite_msg(cur: &str) -> String {
     format!(
-        "windinput:// 协议当前指向：\n{cur}\n\n\
-         继续将改为由本程序处理。若上面是另一份清风输入法（例如旧的安装路径），覆盖是安全的。"
+        "moodflow:// 协议当前指向：\n{cur}\n\n\
+         继续将改为由本程序处理。若上面是另一份Moodflow 输入法（例如旧的安装路径），覆盖是安全的。"
     )
 }
 
 fn remove_msg(cur: &str) -> String {
     format!(
-        "windinput:// 协议当前指向：\n{cur}\n\n\
+        "moodflow:// 协议当前指向：\n{cur}\n\n\
          这不是本程序写入的关联。继续将直接删除它，对应程序的一键导入功能也会随之失效。"
     )
 }
@@ -186,7 +186,7 @@ fn remove_msg(cur: &str) -> String {
 fn assoc_overwrite_msg(cur: &str) -> String {
     format!(
         ".wpkg 文件当前由以下程序打开：\n{cur}\n\n\
-         继续将改为由本程序打开。若上面是另一份清风输入法（例如旧的安装路径），覆盖是安全的。"
+         继续将改为由本程序打开。若上面是另一份Moodflow 输入法（例如旧的安装路径），覆盖是安全的。"
     )
 }
 
@@ -374,7 +374,7 @@ pub fn build_integration_section(app: &Rc<RefCell<AppState>>, state: &AppState) 
     crate::widgets::section_with_attachment(
         "系统集成",
         std::iter::once(setting_row_desc_signal(
-            "windinput:// 协议（一键导入）",
+            "moodflow:// 协议（一键导入）",
             s.protocol_status,
             buttons,
         ))

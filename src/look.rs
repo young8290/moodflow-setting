@@ -31,6 +31,7 @@ pub const DEFAULT: [usize; 6] = [0; 6];
 
 /// 导航选中样式的下标。
 pub mod nav {
+    #[cfg(test)]
     pub const TINT: usize = 0;
     pub const BAR: usize = 1;
     pub const SOLID: usize = 2;
@@ -60,6 +61,7 @@ pub mod sub {
 }
 /// 卡片边界的下标。
 pub mod edge {
+    #[cfg(test)]
     pub const BORDER_SHADOW: usize = 0;
     pub const BORDER: usize = 1;
     pub const SHADOW: usize = 2;

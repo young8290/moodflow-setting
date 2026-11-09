@@ -890,24 +890,25 @@ fn dict_page(_state: &AppState) -> Element {
 // ───────────────────────── 关于 ─────────────────────────
 
 /// 仓库地址。与 Vue 版 `App.vue` 的 repoUrl 一致。
-const REPO_URL: &str = "https://github.com/huanfeng/WindInput";
+const REPO_URL: &str = "https://github.com/young8290/Moodflow";
 /// 官网。
-const WEBSITE_URL: &str = "https://windinput.com";
+const WEBSITE_URL: &str = "https://github.com/young8290/Moodflow";
 /// 社区论坛（经验交流与问题反馈的第一落点，取代原来直挂 GitHub issues 的入口）。
-const FORUM_URL: &str = "https://forum.windinput.com";
+const FORUM_URL: &str = "https://github.com/young8290/Moodflow/issues";
 /// 下载页。版本发布指这里而不是 GitHub releases：官网页面对非开发者更友好，
 /// 且能按平台分发定制版安装包。
-const DOWNLOAD_URL: &str = "https://windinput.com/download";
+const DOWNLOAD_URL: &str = "https://github.com/young8290/Moodflow/releases";
 /// 赞助页。
-const SPONSOR_URL: &str = "https://windinput.com/sponsor";
+const SPONSOR_URL: &str = "https://github.com/young8290/Moodflow";
 /// 主题编辑器。
-pub(crate) const THEME_EDITOR_URL: &str = "https://theme.windinput.com";
+pub(crate) const THEME_EDITOR_URL: &str =
+    "https://github.com/young8290/Moodflow/tree/main/data/themes";
 /// 资源市场（主题皮肤、输入方案等，不止主题）。
-pub(crate) const MARKET_URL: &str = "https://market.windinput.com";
+pub(crate) const MARKET_URL: &str = "https://github.com/young8290/Moodflow/releases";
 /// 官网文档首页（设置向导欢迎页指这里）。
-pub(crate) const DOCS_URL: &str = "https://windinput.com/docs";
+pub(crate) const DOCS_URL: &str = "https://github.com/young8290/Moodflow#readme";
 /// QQ 交流群号。
-const QQ_GROUP: &str = "1085293418";
+const QQ_GROUP: &str = "young8290/Moodflow";
 
 // 品牌图标 SVG（白色填充，24×24 viewBox），从 res/icons 嵌入。图标数据取自 Vue 版
 // AboutPage，保证与网页版逐像素一致；改图标只改 .svg 文件即可，无需动代码。
@@ -1031,12 +1032,12 @@ fn about_page(app: &Rc<RefCell<AppState>>, state: &AppState) -> Element {
     // 「检查更新」按钮要能开对话框并起后台线程，故需共享状态而非只读快照
     let update_state = app.clone();
 
-    // 版本徽章与标题栏统一：取 build 期注入的 WIND_SETTING_VERSION（= docs/VERSION，已含 v 前缀），
+    // 版本徽章与标题栏统一：取 build 期注入的 MOODFLOW_SETTING_VERSION（= docs/VERSION，已含 v 前缀），
     // dev 变体追加 " (Dev)"。不再用 service 上报的 system_info（其值源自 wind-rpc 的
     // CARGO_PKG_VERSION = workspace 兜底版本 0.x）或本 crate 的 CARGO_PKG_VERSION。
     let ver_badge = format!(
         "{}{}",
-        env!("WIND_SETTING_VERSION"),
+        env!("MOODFLOW_SETTING_VERSION"),
         crate::mode::version_suffix()
     );
 
@@ -1051,7 +1052,7 @@ fn about_page(app: &Rc<RefCell<AppState>>, state: &AppState) -> Element {
                 .weight(1.0)
                 .spacing(8)
                 .child(
-                    Element::label("清风输入法")
+                    Element::label("Moodflow 输入法")
                         .font_size(22.0)
                         .font_weight(700)
                         .fg_role(Role::Text)
@@ -1104,7 +1105,7 @@ fn about_page(app: &Rc<RefCell<AppState>>, state: &AppState) -> Element {
         ICON_WEBSITE,
         "官方网站",
         "文档、下载与最新动态",
-        Some(url_chip("windinput.com")),
+        Some(url_chip("GitHub · Moodflow")),
         |ctx| ctx.open_url(WEBSITE_URL),
     );
 
@@ -1137,12 +1138,12 @@ fn about_page(app: &Rc<RefCell<AppState>>, state: &AppState) -> Element {
     let qq = about_link_card(
         Color::hex(0x12B7F5),
         ICON_QQ,
-        "QQ 交流群",
+        "问题反馈",
         QQ_GROUP,
         None,
         |ctx| {
             ctx.clipboard_set(QQ_GROUP);
-            ctx.toast_ok(format!("已复制群号 {QQ_GROUP}"));
+            ctx.toast_ok(format!("已复制项目地址 {QQ_GROUP}"));
         },
     );
 
@@ -1184,7 +1185,7 @@ fn about_page(app: &Rc<RefCell<AppState>>, state: &AppState) -> Element {
         .on_click(|ctx| ctx.open_url(SPONSOR_URL))
         .child(crate::icons::tinted(ICON_HEART, 13, heart))
         .child(
-            Element::label("赞助")
+            Element::label("项目主页")
                 .font_size(12.0)
                 .fg(heart)
                 .max_lines(1)
@@ -1197,7 +1198,7 @@ fn about_page(app: &Rc<RefCell<AppState>>, state: &AppState) -> Element {
         .spacing(4)
         .child(Element::flex_spacer())
         .child(
-            Element::label("© 2026 清风输入法 · MIT License")
+            Element::label("© 2026 Moodflow 输入法 · MIT License")
                 .font_size(12.0)
                 .fg_role(Role::TextMuted)
                 .max_lines(1)

@@ -1189,7 +1189,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let st = user_dict_state();
         st.open_add();
@@ -1237,7 +1237,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let st = user_dict_state();
         st.open_add();
@@ -1266,7 +1266,7 @@ mod tests {
         let _g = crate::rpc::ENV_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
+        unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
 
         let st = user_dict_state();
         let mut tree = Tree::new();

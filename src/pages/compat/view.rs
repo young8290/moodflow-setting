@@ -685,16 +685,14 @@ fn field_row(
     }
 
     let mut sub = meta.summary.clone();
-    if !met {
-        if let Some(d) = &meta.depends_on {
-            let dep_label = schema
-                .field(mgr.current_section(), &d.key)
-                .map_or(d.key.as_str(), |f| f.label.as_str());
-            let dep_value = schema
-                .field(mgr.current_section(), &d.key)
-                .map_or_else(|| d.value.clone(), |f| f.option_label(&d.value));
-            sub = format!("{sub}（需先把「{dep_label}」设为「{dep_value}」）");
-        }
+    if !met && let Some(d) = &meta.depends_on {
+        let dep_label = schema
+            .field(mgr.current_section(), &d.key)
+            .map_or(d.key.as_str(), |f| f.label.as_str());
+        let dep_value = schema
+            .field(mgr.current_section(), &d.key)
+            .map_or_else(|| d.value.clone(), |f| f.option_label(&d.value));
+        sub = format!("{sub}（需先把「{dep_label}」设为「{dep_value}」）");
     }
     let mut right = Element::row()
         .cross(Align::Center)
@@ -867,19 +865,23 @@ mod tests {
     use windui::geometry::Size;
 
     /// mock 模式 + 全 crate 唯一的锁（同 `state::tests::MockGuard`）。
-    struct MockGuard(std::sync::MutexGuard<'static, ()>);
+    struct MockGuard {
+        _guard: std::sync::MutexGuard<'static, ()>,
+    }
     impl MockGuard {
         fn new() -> Self {
             let g = crate::rpc::ENV_LOCK
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
-            unsafe { std::env::set_var("WIND_RPC_MOCK", "1") };
-            MockGuard(g)
+            unsafe { std::env::set_var("MOODFLOW_RPC_MOCK", "1") };
+            crate::pages::compat::mock::advanced_ui_fixtures(true);
+            MockGuard { _guard: g }
         }
     }
     impl Drop for MockGuard {
         fn drop(&mut self) {
-            unsafe { std::env::remove_var("WIND_RPC_MOCK") };
+            unsafe { std::env::remove_var("MOODFLOW_RPC_MOCK") };
+            crate::pages::compat::mock::advanced_ui_fixtures(false);
         }
     }
 

@@ -1,12 +1,12 @@
 // 为 wind_setting 注入版本号（全平台），并为 .exe 嵌入 Windows 资源：
 // 图标 / 版本信息 / manifest（DPI 感知，仅 Windows 目标）。
-// 参考 core 的 wind_input/apps/service/build.rs。
+// 参考 core 的 moodflow_core/apps/service/build.rs。
 //
 // 版本号取自 git（最近 tag + 短 hash），非 git 环境回退 CARGO_PKG_VERSION。
-// 下方 git_version / git / parse_xyz 与本项目无耦合，WindInput 可直接照搬
+// 下方 git_version / git / parse_xyz 与本项目无耦合，Moodflow 可直接照搬
 // （仅产品名、图标路径不同）。
 //
-// ⚠️ `WIND_SETTING_VERSION` 的注入**必须在平台门控之外**：应用代码（src/shell.rs /
+// ⚠️ `MOODFLOW_SETTING_VERSION` 的注入**必须在平台门控之外**：应用代码（src/shell.rs /
 // src/pages/mod.rs / src/update/version.rs）用的是 `env!`，编译期缺它直接 E0080 编译失败，
 // 不是"少个版本号"而是整个 crate 编不过。此前 main() 开头对非 Windows 目标一律早退，
 // 连带把这行也跳过了 —— macOS 上 `scripts/mac/dev.sh 1` 因此始终构建不出设置程序。
@@ -19,10 +19,10 @@ fn main() {
     // HEAD 变动（提交 / 切分支）时重新注入版本。打 tag 属低频操作，必要时 cargo clean。
     println!("cargo:rerun-if-changed=.git/HEAD");
 
-    // 版本优先级: WIND_APP_VERSION (WindInput 打包脚本/CI 从 docs/VERSION 注入) > git tag > CARGO_PKG_VERSION。
-    // 打包时与 wind_input / wind_tsf / 安装包统一走 docs/VERSION; 独立开发时回退 git。
-    println!("cargo:rerun-if-env-changed=WIND_APP_VERSION");
-    let (ver_str, ver_u64) = match std::env::var("WIND_APP_VERSION") {
+    // 版本优先级: MOODFLOW_APP_VERSION (Moodflow 打包脚本/CI 从 docs/VERSION 注入) > git tag > CARGO_PKG_VERSION。
+    // 打包时与 moodflow_core / moodflow_tsf / 安装包统一走 docs/VERSION; 独立开发时回退 git。
+    println!("cargo:rerun-if-env-changed=MOODFLOW_APP_VERSION");
+    let (ver_str, ver_u64) = match std::env::var("MOODFLOW_APP_VERSION") {
         Ok(v) if !v.trim().is_empty() => {
             let v = v.trim().to_string();
             let (maj, min, pat) = parse_xyz(&v);
@@ -45,7 +45,7 @@ fn main() {
     } else {
         ver_str.clone()
     };
-    println!("cargo:rustc-env=WIND_SETTING_VERSION={display_ver}");
+    println!("cargo:rustc-env=MOODFLOW_SETTING_VERSION={display_ver}");
 
     // ── 以下仅 Windows 目标：图标 / 版本资源 / manifest 嵌入 ──
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
@@ -63,7 +63,7 @@ fn main() {
     // manifest：asInvoker + PerMonitorV2 DPI 感知 + win10 + 长路径（对齐 core）。
     let manifest = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">
-  <assemblyIdentity type="win32" name="com.windinput.setting" version="1.0.0.0"/>
+  <assemblyIdentity type="win32" name="com.moodflow.setting" version="1.0.0.0"/>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>
@@ -93,22 +93,20 @@ fn main() {
     // ID 2 供 `.wpkg` 关联的 DefaultIcon 引用（注册表写 `<exe>,-2`，负号 = 按资源 ID
     // 而非位置序号取；位置序号会随资源表顺序变动而错位）。
     res.set_icon_with_id(wpkg_icon.to_str().expect("wpkg icon 路径含非 UTF-8"), "2");
-    res.set("ProductName", "清风输入法");
-    res.set("CompanyName", "清风输入法");
-    res.set("FileDescription", "清风输入法设置");
+    res.set("ProductName", "Moodflow 输入法");
+    res.set("CompanyName", "Moodflow 输入法");
+    res.set("FileDescription", "Moodflow 输入法设置");
     res.set("InternalName", "wind_setting");
     res.set("OriginalFilename", "wind_setting.exe");
-    res.set("LegalCopyright", "Copyright © 清风输入法");
+    res.set("LegalCopyright", "Copyright © Moodflow 输入法");
     res.set("ProductVersion", &ver_str);
     res.set("FileVersion", &ver_str);
     res.set_version_info(winresource::VersionInfo::FILEVERSION, ver_u64);
     res.set_version_info(winresource::VersionInfo::PRODUCTVERSION, ver_u64);
     res.set_manifest(manifest);
 
-    if let Err(e) = res.compile() {
-        // 不致命：缺资源不影响功能，仅图标/版本元数据缺失。
-        println!("cargo:warning=Windows 资源嵌入失败: {e}");
-    }
+    res.compile()
+        .expect("Moodflow Windows resources could not be embedded");
 }
 
 /// 从 git 生成 (字符串版本, 数值版本 u64)。

@@ -249,10 +249,10 @@ mod tests {
               "version": "0.107.0",
               "tag": "v0.107.0",
               "channel": "{channel}",
-              "exeUrl": "https://dl.windinput.com/WindInput-0.107.0-Setup.exe",
+              "exeUrl": "https://github.com/young8290/Moodflow/releases/download/test/Moodflow-0.107.0-Setup.exe",
               "sha256": "{}",
               "size": 48234496,
-              "releaseNotesUrl": "https://dl.windinput.com/WindInput-0.107.0-Release.md",
+              "releaseNotesUrl": "https://github.com/young8290/Moodflow/releases/download/test/Moodflow-0.107.0-Release.md",
               "publishedAt": "2026-07-19T10:00:00Z"
             }}"#,
             "a".repeat(64)
@@ -275,7 +275,7 @@ mod tests {
         let json = r#"{
           "version": "0.107.0-dev.3",
           "channel": "dev",
-          "exeUrl": "https://dl.windinput.com/WindInputDev-Setup-0.107.0-dev.3.exe",
+          "exeUrl": "https://github.com/young8290/Moodflow/releases/download/test/MoodflowDev-Setup-0.107.0-dev.3.exe",
           "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
           "size": 1,
           "releaseNotesUrl": ""
@@ -341,8 +341,8 @@ mod tests {
     #[test]
     fn rejects_non_https_download_url() {
         let json = valid_json("stable").replace(
-            "https://dl.windinput.com/WindInput",
-            "http://dl.windinput.com/WindInput",
+            "https://github.com/young8290/Moodflow/releases/download/test/Moodflow",
+            "http://example.invalid/Moodflow",
         );
         let err = parse_latest_json(&json, Channel::Stable, Artifact::Exe).unwrap_err();
         assert!(err.user_message().contains("https"));
@@ -362,8 +362,8 @@ mod tests {
         assert!(matches!(err, UpdateError::InvalidMetadata(_)));
     }
 
-    /// 契约守护：这段 JSON 是 `WindInput/scripts/dev.ps1` 的 `New-UpdateManifest`
-    /// 实际产出的原文（2026-07-19 用 WindInputDev-Setup-0.104.0.exe 实测复制而来）。
+    /// 契约守护：这段 JSON 是 `Moodflow/scripts/dev.ps1` 的 `New-UpdateManifest`
+    /// 实际产出的原文（2026-07-19 用 MoodflowDev-Setup-0.104.0.exe 实测复制而来）。
     ///
     /// 打包脚本改字段名、改大小写、把 size 写成字符串、给 JSON 加 BOM —— 任一情况
     /// 都会让这个测试红掉，而不是等到用户点「检查更新」才发现升级链路是断的。
@@ -373,10 +373,10 @@ mod tests {
   "version": "0.104.0",
   "tag": "v0.104.0",
   "channel": "dev",
-  "exeUrl": "https://dl.windinput.com/WindInputDev-Setup-0.104.0.exe",
+  "exeUrl": "https://github.com/young8290/Moodflow/releases/download/test/MoodflowDev-Setup-0.104.0.exe",
   "sha256": "d90233c00ca35673d27299be62ce791dbc9b81c76180862891276b0211392382",
   "size": 22659156,
-  "releaseNotesUrl": "https://dl.windinput.com/WindInputDev-0.104.0-Release.md",
+  "releaseNotesUrl": "https://github.com/young8290/Moodflow/releases/download/test/MoodflowDev-0.104.0-Release.md",
   "publishedAt": "2026-07-19T12:32:25Z"
 }"#;
         let info = parse_latest_json(real, Channel::Dev, Artifact::Exe)
@@ -388,10 +388,7 @@ mod tests {
             info.sha256,
             "d90233c00ca35673d27299be62ce791dbc9b81c76180862891276b0211392382"
         );
-        assert!(
-            info.download_url
-                .ends_with("WindInputDev-Setup-0.104.0.exe")
-        );
+        assert!(info.download_url.ends_with("MoodflowDev-Setup-0.104.0.exe"));
 
         // 同一份 dev 元数据喂给正式版客户端必须被拒
         assert!(matches!(
@@ -408,10 +405,10 @@ mod tests {
               "version": "0.116.0",
               "tag": "v0.116.0",
               "channel": "stable",
-              "pkgUrl": "https://dl.windinput.com/WindInput-0.116.0-macOS.pkg",
+              "pkgUrl": "https://github.com/young8290/Moodflow/releases/download/test/Moodflow-0.116.0-macOS.pkg",
               "sha256": "{}",
               "size": 20971520,
-              "releaseNotesUrl": "https://dl.windinput.com/WindInput-0.116.0-Release.md",
+              "releaseNotesUrl": "https://github.com/young8290/Moodflow/releases/download/test/Moodflow-0.116.0-Release.md",
               "publishedAt": "2026-08-12T10:00:00Z"
             }}"#,
             "c".repeat(64)
@@ -452,12 +449,12 @@ mod tests {
             r#"{{
               "version": "0.125.0", "tag": "v0.125.0", "channel": "stable",
               "debs": {{
-                "amd64": {{ "url": "https://dl.windinput.com/WindInput-0.125.0-linux-amd64.deb",
+                "amd64": {{ "url": "https://github.com/young8290/Moodflow/releases/download/test/Moodflow-0.125.0-linux-amd64.deb",
                            "sha256": "{a}", "size": 23000000 }},
-                "arm64": {{ "url": "https://dl.windinput.com/WindInput-0.125.0-linux-arm64.deb",
+                "arm64": {{ "url": "https://github.com/young8290/Moodflow/releases/download/test/Moodflow-0.125.0-linux-arm64.deb",
                            "sha256": "{b}", "size": 22000000 }}
               }},
-              "releaseNotesUrl": "https://dl.windinput.com/WindInput-0.125.0-Release.md",
+              "releaseNotesUrl": "https://github.com/young8290/Moodflow/releases/download/test/Moodflow-0.125.0-Release.md",
               "publishedAt": "2026-10-10T00:00:00Z"
             }}"#,
             a = "a".repeat(64),
@@ -503,7 +500,7 @@ mod tests {
     fn real_manifest_drives_upgrade_decision() {
         let real = r#"{
   "version": "0.104.0", "tag": "v0.104.0", "channel": "dev",
-  "exeUrl": "https://dl.windinput.com/WindInputDev-Setup-0.104.0.exe",
+  "exeUrl": "https://github.com/young8290/Moodflow/releases/download/test/MoodflowDev-Setup-0.104.0.exe",
   "sha256": "d90233c00ca35673d27299be62ce791dbc9b81c76180862891276b0211392382",
   "size": 22659156, "releaseNotesUrl": "", "publishedAt": "2026-07-19T12:32:25Z"
 }"#;

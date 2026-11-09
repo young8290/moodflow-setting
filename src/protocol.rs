@@ -1,5 +1,5 @@
-//! `windinput://` 协议解析 + 注册。
-//! 格式:`windinput://import/<kind>?url=<https>&name=<可选>`,kind∈theme/schema/dict/extdict。
+//! `moodflow://` 协议解析 + 注册。
+//! 格式:`moodflow://import/<kind>?url=<https>&name=<可选>`,kind∈theme/schema/dict/extdict。
 
 /// 协议导入请求(解析结果)。
 pub struct ProtocolRequest {
@@ -14,9 +14,10 @@ const KINDS: &[&str] = &["theme", "schema", "dict", "extdict"];
 pub fn parse_protocol_url(raw: &str) -> Result<ProtocolRequest, String> {
     let raw = raw.trim();
     let rest = raw
-        .strip_prefix("windinput://")
-        .or_else(|| raw.strip_prefix("WINDINPUT://"))
-        .ok_or("不支持的协议(应为 windinput://)")?;
+        .split_once("://")
+        .filter(|(scheme, _)| scheme.eq_ignore_ascii_case("moodflow"))
+        .map(|(_, rest)| rest)
+        .ok_or("不支持的协议(应为 moodflow://)")?;
     // rest = "import/<kind>?<query>"
     let (path, query) = match rest.split_once('?') {
         Some((p, q)) => (p, q),
@@ -82,12 +83,12 @@ fn percent_decode(s: &str) -> String {
 
 /// 协议根键（HKCU 下的用户级关联，不需管理员权限）。
 #[cfg(windows)]
-const PROTOCOL_KEY: &str = r"Software\Classes\windinput";
+const PROTOCOL_KEY: &str = r"Software\Classes\moodflow";
 /// 命令行子键。
 #[cfg(windows)]
-const COMMAND_KEY: &str = r"Software\Classes\windinput\shell\open\command";
+const COMMAND_KEY: &str = r"Software\Classes\moodflow\shell\open\command";
 
-/// `windinput://` 协议当前归谁。
+/// `moodflow://` 协议当前归谁。
 ///
 /// macOS 上 `Ours` / `Other` 不会被构造：协议由 `.app` 的 Info.plist 声明，
 /// [`current_registration`] 恒报 `Unregistered`。页面仍按三态写一套分支（跨平台共用），
@@ -101,7 +102,7 @@ pub enum Registration {
     Ours,
     /// 已注册但指向别处，携带注册表里的原始命令行。
     ///
-    /// 最常见的来源不是"别的软件抢了"，而是**另一份清风输入法**：用户装过安装版又跑便携版、
+    /// 最常见的来源不是"别的软件抢了"，而是**另一份Moodflow 输入法**：用户装过安装版又跑便携版、
     /// 或便携目录被移动过。所以文案要把命令行原样摆出来让用户自己判断，不能一律说成"被占用"。
     Other(String),
 }
@@ -240,7 +241,7 @@ pub fn register() -> Result<(), String> {
     let (root, _) = hkcu
         .create_subkey(PROTOCOL_KEY)
         .map_err(|e| format!("创建注册表项失败：{e}"))?;
-    root.set_value("", &"URL:清风输入法协议")
+    root.set_value("", &"URL:Moodflow 输入法协议")
         .map_err(|e| format!("写入协议描述失败：{e}"))?;
     // 这个空值不是可有可无的占位：shell 靠 `URL Protocol` 值的**存在**认定该键是
     // 协议处理器，缺了它链接点下去不会唤起任何程序。
@@ -251,11 +252,11 @@ pub fn register() -> Result<(), String> {
         .map_err(|e| format!("创建命令行项失败：{e}"))?;
     cmd.set_value("", &want)
         .map_err(|e| format!("写入命令行失败：{e}"))?;
-    tracing::info!("windinput:// 协议已注册：{want}");
+    tracing::info!("moodflow:// 协议已注册：{want}");
     Ok(())
 }
 
-/// 解除协议关联（删掉整棵 `Software\Classes\windinput`）。
+/// 解除协议关联（删掉整棵 `Software\Classes\moodflow`）。
 ///
 /// 键本就不存在时视作成功 —— 用户要的是"最终没有关联"这个结果，
 /// 报错反而让人以为没删干净。
@@ -266,7 +267,7 @@ pub fn unregister() -> Result<(), String> {
 
     match RegKey::predef(HKEY_CURRENT_USER).delete_subkey_all(PROTOCOL_KEY) {
         Ok(()) => {
-            tracing::info!("windinput:// 协议注册已解除");
+            tracing::info!("moodflow:// 协议注册已解除");
             Ok(())
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
@@ -274,8 +275,8 @@ pub fn unregister() -> Result<(), String> {
     }
 }
 
-/// 启动时自愈 `windinput://` 协议注册(仅 Windows)。
-/// `HKCU\Software\Classes\windinput\shell\open\command = "<exe>" "%1"`。
+/// 启动时自愈 `moodflow://` 协议注册(仅 Windows)。
+/// `HKCU\Software\Classes\moodflow\shell\open\command = "<exe>" "%1"`。
 ///
 /// 调用前须先过 [`should_self_heal_on_startup`] 的门控。已是本程序则直接跳过，
 /// 不做任何写入 —— 绝大多数启动都走这条路，不该每次都碰注册表。
@@ -288,17 +289,17 @@ pub fn self_heal_registration() {
             // 指向一个还活着的程序时保持原状：静默抢占会让高级页的「当前由谁注册」
             // 永远显示"本程序"——那个状态展示和覆盖前的确认也就都成了摆设。
             if is_stale_registration(&cur, |p| std::path::Path::new(p).exists()) {
-                tracing::info!("windinput:// 协议原指向已不存在的 {cur}，自愈收回");
+                tracing::info!("moodflow:// 协议原指向已不存在的 {cur}，自愈收回");
                 if let Err(e) = register() {
-                    tracing::warn!("windinput:// 协议自愈失败：{e}");
+                    tracing::warn!("moodflow:// 协议自愈失败：{e}");
                 }
             } else {
-                tracing::info!("windinput:// 协议由 {cur} 处理且该程序仍在，启动时不接管");
+                tracing::info!("moodflow:// 协议由 {cur} 处理且该程序仍在，启动时不接管");
             }
         }
         Registration::Unregistered => {
             if let Err(e) = register() {
-                tracing::warn!("windinput:// 协议注册失败：{e}");
+                tracing::warn!("moodflow:// 协议注册失败：{e}");
             }
         }
     }
@@ -350,7 +351,7 @@ mod tests {
     #[test]
     fn valid_theme() {
         let r = parse_protocol_url(
-            "windinput://import/theme?url=https%3A%2F%2Fsite.com%2Fa.yaml&name=Dark",
+            "moodflow://import/theme?url=https%3A%2F%2Fsite.com%2Fa.yaml&name=Dark",
         )
         .unwrap();
         assert_eq!(r.kind, "theme");
@@ -361,7 +362,7 @@ mod tests {
     #[test]
     fn parse_theme_import_https() {
         let req = parse_protocol_url(
-            "windinput://import/theme?url=https://example.com/theme.toml&name=Blue",
+            "moodflow://import/theme?url=https://example.com/theme.toml&name=Blue",
         )
         .unwrap();
         assert_eq!(req.kind, "theme");
@@ -372,7 +373,7 @@ mod tests {
     #[test]
     fn reject_protocol_import_http_url() {
         assert!(
-            parse_protocol_url("windinput://import/theme?url=http://example.com/theme.toml")
+            parse_protocol_url("moodflow://import/theme?url=http://example.com/theme.toml")
                 .is_err()
         );
     }
@@ -381,8 +382,8 @@ mod tests {
     /// 表现为界面常显"被其它程序注册"、每次启动还多写一次注册表。
     #[test]
     fn classify_ignores_path_case() {
-        let want = command_for_exe(r"C:\Program Files\WindInput\wind_setting.exe");
-        let cur = command_for_exe(r"c:\program files\windinput\WIND_SETTING.EXE");
+        let want = command_for_exe(r"C:\Program Files\Moodflow\wind_setting.exe");
+        let cur = command_for_exe(r"c:\program files\moodflow\WIND_SETTING.EXE");
         assert_eq!(classify(Some(&cur), &want), Registration::Ours);
     }
 
@@ -411,16 +412,16 @@ mod tests {
     #[test]
     fn command_quotes_exe_and_url_placeholder() {
         assert_eq!(
-            command_for_exe(r"C:\Program Files\WindInput\wind_setting.exe"),
-            r#""C:\Program Files\WindInput\wind_setting.exe" "%1""#
+            command_for_exe(r"C:\Program Files\Moodflow\wind_setting.exe"),
+            r#""C:\Program Files\Moodflow\wind_setting.exe" "%1""#
         );
     }
 
     #[test]
     fn exe_path_extracted_from_quoted_and_bare_commands() {
         assert_eq!(
-            exe_path_in_command(r#""C:\Program Files\WindInput\wind_setting.exe" "%1""#).as_deref(),
-            Some(r"C:\Program Files\WindInput\wind_setting.exe")
+            exe_path_in_command(r#""C:\Program Files\Moodflow\wind_setting.exe" "%1""#).as_deref(),
+            Some(r"C:\Program Files\Moodflow\wind_setting.exe")
         );
         // 无引号的历史值仍要能取出路径，否则会被当成畸形值静默收回别人的关联。
         assert_eq!(
@@ -471,9 +472,9 @@ mod tests {
     #[test]
     fn rejects() {
         assert!(parse_protocol_url("http://import/theme?url=https://x").is_err()); // 错 scheme
-        assert!(parse_protocol_url("windinput://import/unknown?url=https://x").is_err()); // 未知 kind
-        assert!(parse_protocol_url("windinput://import/theme").is_err()); // 缺 url
-        assert!(parse_protocol_url("windinput://import/theme?url=http://x/a.yaml").is_err());
+        assert!(parse_protocol_url("moodflow://import/unknown?url=https://x").is_err()); // 未知 kind
+        assert!(parse_protocol_url("moodflow://import/theme").is_err()); // 缺 url
+        assert!(parse_protocol_url("moodflow://import/theme?url=http://x/a.yaml").is_err());
         // 非 https
     }
 }

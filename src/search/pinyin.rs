@@ -3,7 +3,7 @@
 //! ## 表从哪来
 //!
 //! 不是手工录的：由 `scripts/gen-pinyin-initials.ps1` 从 core 的
-//! `../WindInput/build/data/pinyin_map.txt`（44 439 行，多音字按常用频率排序、已裁古音）
+//! `../Moodflow/build/data/pinyin_map.txt`（44 439 行，多音字按常用频率排序、已裁古音）
 //! 派生而来，用的就是这套输入法自己的读音。`pinyin_map.txt` 是 core 的构建产物、
 //! 不随本仓发布，故**只在生成时读一次，运行时零依赖**。
 //!

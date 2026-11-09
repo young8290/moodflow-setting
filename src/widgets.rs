@@ -391,15 +391,15 @@ fn setting_row_badged(label: &str, sub: Option<&str>, badge: Element, control: E
     Element::row()
         .width_match()
         .cross(Align::Center)
-        .padding_xy(0, f.row_pad_y())
-        .spacing(f.gap())
+        .padding_xy(0, f.row_pad_y(m))
+        .spacing(f.gap(m))
         .child(left)
         .child(control)
 }
 
 /// 副标题随信号变化的设置行：左标签 + 下方动态说明 + 右控件。
 ///
-/// 用于展示**运行期状态**（如 `windinput://` 关联当前指向谁）——库的
+/// 用于展示**运行期状态**（如 `moodflow://` 关联当前指向谁）——库的
 /// `setting_row_desc` 只收 `String`，套不进随注册表变化的文案。除副标题换成
 /// `label_signal` 外，字号/文字色/间距/内边距一律走同一套 `FormTheme`，
 /// 与相邻的清单行对得齐。
@@ -436,8 +436,8 @@ pub fn setting_row_desc_signal(label: &str, desc: Signal<String>, control: Eleme
         .width_match()
         // Center 而非 Start：右侧是一组按钮，副标题一行时贴顶会让按钮与标签错位。
         .cross(Align::Center)
-        .padding_xy(0, f.row_pad_y())
-        .spacing(f.gap())
+        .padding_xy(0, f.row_pad_y(m))
+        .spacing(f.gap(m))
         .child(left)
         .child(control)
 }
@@ -504,8 +504,8 @@ pub fn setting_row_override(
     Element::row()
         .width_match()
         .cross(Align::Center)
-        .padding_xy(0, f.row_pad_y())
-        .spacing(f.gap())
+        .padding_xy(0, f.row_pad_y(m))
+        .spacing(f.gap(m))
         // 空标签的勾选框：标签文字在左列，这里只要那个方框。
         .child(Element::checkbox("", over).small().fg_role(Role::Text))
         .child(left)
@@ -658,8 +658,8 @@ pub fn setting_row_checks(label: &str, sub: Option<&str>, grid: Element) -> Elem
     Element::row()
         .width_match()
         .cross(Align::Start)
-        .padding_xy(0, f.row_pad_y())
-        .spacing(f.gap())
+        .padding_xy(0, f.row_pad_y(m))
+        .spacing(f.gap(m))
         .child(left)
         .child(grid.width(300))
 }

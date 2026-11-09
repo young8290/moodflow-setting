@@ -22,7 +22,7 @@ pub fn open(ctx: &mut EventCtx, app: &Rc<RefCell<AppState>>) {
     let look = app.borrow().look;
     let app_c = app.clone();
     ctx.open_window(
-        Window::new("清风输入法 · 界面细节", 460, 430)
+        Window::new("Moodflow 输入法 · 界面细节", 460, 430)
             .single(SINGLE_KEY)
             .frameless(true)
             .centered(true)
